@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  skycore-linux:
+    name: SkyCore tests (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.0-noble
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        working-directory: SkyCore
+        run: swift test
+
+  ios:
+    name: SkyCore tests + iOS app build (macOS)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode version
+        run: xcodebuild -version
+      - name: Test SkyCore
+        working-directory: SkyCore
+        run: swift test
+      - name: Build app for iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project SkyAtlas.xcodeproj \
+            -scheme SkyAtlas \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
