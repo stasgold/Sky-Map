@@ -193,6 +193,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Stellar Navigator";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your approximate location determines which part of the sky is above you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Motion sensors let the map follow where you point your phone.";
@@ -226,6 +227,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Stellar Navigator";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your approximate location determines which part of the sky is above you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Motion sensors let the map follow where you point your phone.";
