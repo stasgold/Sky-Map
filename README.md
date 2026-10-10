@@ -1,4 +1,4 @@
-# Sky Atlas for iOS
+# Stellar Navigator for iOS
 
 An iOS port of **[Sky Map v2](https://github.com/sky-map-team/stardroid/tree/master/stardroid-v2)**,
 the open-source Android planetarium: point your phone at the sky and see the stars,
@@ -7,8 +7,9 @@ with no account and no ads.
 
 > **Name:** "Sky Map" and its icons are trademarks/reserved assets of Penterakt LLC, and
 > upstream's license requires independent distributions to use a distinct name and identity. So
-> this port ships as **Sky Atlas** (a placeholder; change `INFOPLIST_KEY_CFBundleDisplayName`
-> in the Xcode project) with its own icon and marker glyphs. See [LICENSE.md](LICENSE.md) and
+> this port ships as **Stellar Navigator**, with its own icon and marker glyphs. (The bundle
+> identifier, `io.github.stasgold.skyatlas`, predates the rename and is kept because the App Store
+> Connect record is tied to it; it is never shown to users.) See [LICENSE.md](LICENSE.md) and
 > [NOTICE.md](NOTICE.md).
 
 ## Features
@@ -56,14 +57,14 @@ SkyCore/            Swift package with no UIKit dependency, so it builds and tes
     Map/            camera gestures (drag/zoom/rotate/fling/slew/level) and tap-to-identify
     Resources/catalog/   v2's source-data, verbatim
   Tests/            31 tests, including upstream's USNO/Almanac golden values
-SkyAtlas/           the iOS app (SwiftUI + UIKit)
+StellarNavigator/           the iOS app (SwiftUI + UIKit)
   AppModel.swift    state, settings, clock/time travel, scene caching, sensors → camera
   SkyRenderer.swift CoreGraphics backend (gnomonic projection, phases, labels, glyphs)
   SkyView.swift     display-link view and gestures
   Sensors.swift     CoreMotion orientation, CoreLocation
   MapScreen.swift, Sheets.swift   UI
 Imagery/            planet discs and celestial photos (third-party, see NOTICE.md)
-SkyAtlas.xcodeproj  Xcode 16 project (synchronized folders + local SkyCore package)
+StellarNavigator.xcodeproj  Xcode 16 project (synchronized folders + local SkyCore package)
 ```
 
 The architecture follows v2: **pure producers → immutable `LayerScene`s → a backend**. All of
@@ -75,7 +76,7 @@ side is a thin rendering, sensor and UI shell.
 Requirements: Xcode 16+ and iOS 17+.
 
 ```sh
-open SkyAtlas.xcodeproj    # select the SkyAtlas scheme, set your signing team, and run
+open StellarNavigator.xcodeproj    # select the StellarNavigator scheme, set your signing team, and run
 ```
 
 Motion sensors and the compass need a real device. In the Simulator the app starts in manual

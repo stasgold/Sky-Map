@@ -18,7 +18,7 @@ This port is **not affiliated with or endorsed by** the Sky Map team or Penterak
 | `core/catalog`, `data/generator/SourceDataLoader`, `data/RoomCatalogRepository` | `SkyCore/Sources/SkyCore/Catalog` |
 | `render/api`, parts of `render/gles1` (stellar styling, label decluttering) | `SkyCore/Sources/SkyCore/Render` |
 | `app/…/layers` | `SkyCore/Sources/SkyCore/Layers` |
-| `app/…/ui/map/MapViewModel` (gestures, slew, leveling), tap-to-identify | `SkyCore/Sources/SkyCore/Map`, `SkyAtlas/AppModel.swift` |
+| `app/…/ui/map/MapViewModel` (gestures, slew, leveling), tap-to-identify | `SkyCore/Sources/SkyCore/Map`, `StellarNavigator/AppModel.swift` |
 | `source-data/` | `SkyCore/Sources/SkyCore/Resources/catalog` (verbatim) |
 | `app/src/main/assets/planets`, `…/celestial_images` | `Imagery/` (verbatim) |
 

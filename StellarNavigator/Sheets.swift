@@ -406,7 +406,7 @@ struct AboutSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Sky Atlas").font(.title.bold())
+                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Stellar Navigator").font(.title.bold())
                     Text("An iOS port of the open-source Sky Map v2 Android app (github.com/sky-map-team/stardroid). It is not affiliated with or endorsed by the Sky Map team or Penterakt LLC. Free software under the GNU GPL v3 or later; the source code is available on GitHub.")
                     Text("Catalog: \(model.catalog?.objectCount ?? 0) objects, entirely offline.").foregroundStyle(.secondary)
                     Text(Credits.text)

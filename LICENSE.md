@@ -1,9 +1,9 @@
 SPDX-License-Identifier: GPL-3.0-or-later
 
-Sky Atlas for iOS — a Swift port of Sky Map v2 (https://github.com/sky-map-team/stardroid).
+Stellar Navigator for iOS — a Swift port of Sky Map v2 (https://github.com/sky-map-team/stardroid).
 
 Copyright (c) 2026 Penterakt LLC and contributors (the original Kotlin program and its data).
-Copyright (c) 2026 the Sky Atlas for iOS contributors (the Swift port).
+Copyright (c) 2026 the Stellar Navigator for iOS contributors (the Swift port).
 
 This program is free software: you can redistribute it and/or modify it under the terms of the
 GNU General Public License as published by the Free Software Foundation, either version 3 of the
@@ -53,8 +53,8 @@ distributed through those channels while the source remains free software under 
 - **Sky Map brand assets are not included.** Upstream reserves the "Sky Map" name, its launcher
   and notification icons, the welcome backdrop and the sky-marker icon set (All Rights Reserved,
   Penterakt LLC; see upstream `ASSET-LICENSES.txt`). This port ships none of them: it uses its
-  own name, its own app icon (`SkyAtlas/Assets.xcassets/AppIcon.appiconset`, GPLv3) and draws
-  its own vector marker glyphs (`SkyAtlas/SkyRenderer.swift`).
+  own name, its own app icon (`StellarNavigator/Assets.xcassets/AppIcon.appiconset`, GPLv3) and draws
+  its own vector marker glyphs (`StellarNavigator/SkyRenderer.swift`).
 - **Scientific data and imagery keep their own terms.** `Imagery/` and the catalog data under
   `SkyCore/Sources/SkyCore/Resources/catalog/` are a mix of public-domain material (NASA, ESA,
   JPL, USNO and public catalogs) and **CC BY 4.0** material (ESO, IAU, IAU/Sky & Telescope,

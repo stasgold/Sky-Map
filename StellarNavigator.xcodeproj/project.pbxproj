@@ -12,15 +12,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A10000000000000000000010 /* SkyAtlas.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyAtlas.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000010 /* StellarNavigator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StellarNavigator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000011 /* Imagery */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Imagery; sourceTree = "<group>"; };
 		A10000000000000000000012 /* SkyCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = SkyCore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A10000000000000000000030 /* SkyAtlas */ = {
+		A10000000000000000000030 /* StellarNavigator */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = SkyAtlas;
+			path = StellarNavigator;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -40,7 +40,7 @@
 		A10000000000000000000050 = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000030 /* SkyAtlas */,
+				A10000000000000000000030 /* StellarNavigator */,
 				A10000000000000000000011 /* Imagery */,
 				A10000000000000000000012 /* SkyCore */,
 				A10000000000000000000051 /* Products */,
@@ -50,7 +50,7 @@
 		A10000000000000000000051 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000010 /* SkyAtlas.app */,
+				A10000000000000000000010 /* StellarNavigator.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -58,9 +58,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A10000000000000000000060 /* SkyAtlas */ = {
+		A10000000000000000000060 /* StellarNavigator */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A10000000000000000000090 /* Build configuration list for PBXNativeTarget "SkyAtlas" */;
+			buildConfigurationList = A10000000000000000000090 /* Build configuration list for PBXNativeTarget "StellarNavigator" */;
 			buildPhases = (
 				A10000000000000000000070 /* Sources */,
 				A10000000000000000000040 /* Frameworks */,
@@ -71,14 +71,14 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				A10000000000000000000030 /* SkyAtlas */,
+				A10000000000000000000030 /* StellarNavigator */,
 			);
-			name = SkyAtlas;
+			name = StellarNavigator;
 			packageProductDependencies = (
 				A10000000000000000000020 /* SkyCore */,
 			);
-			productName = SkyAtlas;
-			productReference = A10000000000000000000010 /* SkyAtlas.app */;
+			productName = StellarNavigator;
+			productReference = A10000000000000000000010 /* StellarNavigator.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -96,7 +96,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A10000000000000000000093 /* Build configuration list for PBXProject "SkyAtlas" */;
+			buildConfigurationList = A10000000000000000000093 /* Build configuration list for PBXProject "StellarNavigator" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -110,7 +110,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A10000000000000000000060 /* SkyAtlas */,
+				A10000000000000000000060 /* StellarNavigator */,
 			);
 		};
 /* End PBXProject section */
@@ -192,7 +192,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Sky Atlas";
+				INFOPLIST_KEY_CFBundleDisplayName = "Stellar Navigator";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your approximate location determines which part of the sky is above you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Motion sensors let the map follow where you point your phone.";
@@ -225,7 +225,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Sky Atlas";
+				INFOPLIST_KEY_CFBundleDisplayName = "Stellar Navigator";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your approximate location determines which part of the sky is above you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Motion sensors let the map follow where you point your phone.";
@@ -252,7 +252,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A10000000000000000000090 /* Build configuration list for PBXNativeTarget "SkyAtlas" */ = {
+		A10000000000000000000090 /* Build configuration list for PBXNativeTarget "StellarNavigator" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A10000000000000000000091 /* Debug */,
@@ -261,7 +261,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A10000000000000000000093 /* Build configuration list for PBXProject "SkyAtlas" */ = {
+		A10000000000000000000093 /* Build configuration list for PBXProject "StellarNavigator" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A10000000000000000000094 /* Debug */,

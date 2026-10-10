@@ -11,7 +11,7 @@
 import SwiftUI
 
 @main
-struct SkyAtlasApp: App {
+struct StellarNavigatorApp: App {
     var body: some Scene {
         WindowGroup {
             MapScreen()

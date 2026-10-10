@@ -30,8 +30,8 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild \
-            -project SkyAtlas.xcodeproj \
-            -scheme SkyAtlas \
+            -project StellarNavigator.xcodeproj \
+            -scheme StellarNavigator \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
