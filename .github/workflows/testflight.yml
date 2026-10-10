@@ -37,7 +37,34 @@ jobs:
           KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY }}
         run: |
           mkdir -p ~/private_keys
-          printf '%s\n' "$KEY_P8" > ~/private_keys/AuthKey_$KEY_ID.p8
+          # Rebuild a clean PEM whatever form the secret was pasted in: with or without the
+          # BEGIN/END lines, Windows line endings, line breaks lost (one long line, or spaces
+          # instead of newlines), or the whole .p8 file base64-encoded once more.
+          python3 - "$HOME/private_keys/AuthKey_$KEY_ID.p8" <<'PY'
+          import base64, os, re, sys
+          raw = os.environ["KEY_P8"].replace("\r", "")
+          body = re.sub(r"-----(BEGIN|END)[A-Z ]*-----", "", raw)
+          body = re.sub(r"[^A-Za-z0-9+/=]", "", body)
+          try:
+              decoded = base64.b64decode(body + "=" * (-len(body) % 4))
+          except Exception:
+              decoded = b""
+          if b"PRIVATE KEY" in decoded:
+              # The secret was a base64-encoded .p8 file; use what it contained.
+              text = decoded.decode("utf-8", "replace")
+              body = re.sub(r"-----(BEGIN|END)[A-Z ]*-----", "", text)
+              body = re.sub(r"[^A-Za-z0-9+/=]", "", body)
+              decoded = base64.b64decode(body + "=" * (-len(body) % 4))
+          lines = [body[i:i + 64] for i in range(0, len(body), 64)]
+          pem = "-----BEGIN PRIVATE KEY-----\n" + "\n".join(lines) + "\n-----END PRIVATE KEY-----\n"
+          open(sys.argv[1], "w").write(pem)
+          # Non-secret diagnostics: an App Store Connect EC P-256 key is ~138 bytes of DER.
+          print(f"Key body: {len(body)} base64 chars, {len(decoded)} DER bytes, starts with SEQUENCE: {decoded[:1] == b'0'}")
+          if len(decoded) < 100 or decoded[:1] != b"0":
+              print("::error::APP_STORE_CONNECT_KEY does not look like an App Store Connect .p8 private key. "
+                    "Paste the entire AuthKey_XXXX.p8 file contents.")
+              sys.exit(1)
+          PY
           echo "KEY_PATH=$HOME/private_keys/AuthKey_$KEY_ID.p8" >> "$GITHUB_ENV"
 
       - name: Archive
