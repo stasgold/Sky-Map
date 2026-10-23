@@ -6,6 +6,13 @@ on:
   workflow_dispatch:
 
 jobs:
+  release-code-check:
+    name: Release code check (App Review safety)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/check_release_code.py
+
   skycore-linux:
     name: SkyCore tests (Linux)
     runs-on: ubuntu-latest

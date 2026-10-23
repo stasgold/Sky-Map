@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Release code check (App Review safety)
+        run: python3 tools/check_release_code.py
+
       - name: Select Xcode 26 or later
         run: |
           XCODE=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | sort -V | grep -v -i beta | tail -1)
