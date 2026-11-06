@@ -4,7 +4,8 @@
 Applies appstore/listing.json to the app's editable App Store version: name, subtitle and
 privacy policy URL (app info); description, keywords, promotional text and support and
 marketing URLs (version localization); copyright; categories; content-rights declaration;
-the age-rating questionnaire (all "none", rated 4+); App Review notes; and the build to submit
+the age-rating questionnaire (all "none", rated 4+); App Review notes; the build to submit;
+the price (Free) and availability (every territory, including new ones)
 (the newest processed build of the version, or BUILD_NUMBER if set). Each part is applied
 separately and reported, so one rejected field does not stop the rest.
 
@@ -25,7 +26,8 @@ import urllib.request
 
 import jwt  # PyJWT with the crypto extra
 
-API = "https://api.appstoreconnect.apple.com/v1"
+ROOT = "https://api.appstoreconnect.apple.com"
+API = ROOT + "/v1"
 
 
 class ASCError(Exception):
@@ -58,7 +60,8 @@ def token():
 
 
 def call(method, path, body=None):
-    req = urllib.request.Request(API + path, data=json.dumps(body).encode() if body is not None else None,
+    url = ROOT + path if path.startswith("/v2/") else API + path
+    req = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None,
                                  method=method, headers={"Authorization": f"Bearer {token()}",
                                                          "Content-Type": "application/json"})
     try:
@@ -211,6 +214,59 @@ def main():
         call("PATCH", f"/appStoreVersions/{vid}/relationships/build", {"data": {"type": "builds", "id": b["id"]}})
         return f"(build {b['attributes']['version']})"
 
+    def pricing():
+        # Free: the zero price point in the base territory; other territories follow it.
+        points = call("GET", f"/apps/{app_id}/appPricePoints?filter[territory]=USA&limit=200")["data"]
+        free = next((p for p in points if float(p["attributes"]["customerPrice"]) == 0.0), None)
+        if free is None:
+            raise ASCError("no free price point found for USA")
+        call("POST", "/appPriceSchedules", {
+            "data": {"type": "appPriceSchedules", "relationships": {
+                "app": {"data": {"type": "apps", "id": app_id}},
+                "baseTerritory": {"data": {"type": "territories", "id": "USA"}},
+                "manualPrices": {"data": [{"type": "appPrices", "id": "${free}"}]}}},
+            "included": [{"type": "appPrices", "id": "${free}", "attributes": {"startDate": None},
+                          "relationships": {"appPricePoint": {"data": {"type": "appPricePoints", "id": free["id"]}}}}]})
+        return "(Free, base territory USA)"
+
+    def availability():
+        territories = []
+        url = "/territories?limit=200"
+        while url:
+            page = call("GET", url)
+            territories += [t["id"] for t in page["data"]]
+            nxt = page.get("links", {}).get("next")
+            url = nxt.split("/v1", 1)[1] if nxt else None
+        try:
+            call("POST", "/v2/appAvailabilities", {
+                "data": {"type": "appAvailabilities", "attributes": {"availableInNewTerritories": True},
+                         "relationships": {
+                             "app": {"data": {"type": "apps", "id": app_id}},
+                             "territoryAvailabilities": {"data": [
+                                 {"type": "territoryAvailabilities", "id": f"${{{t}}}"} for t in territories]}}},
+                "included": [{"type": "territoryAvailabilities", "id": f"${{{t}}}", "attributes": {"available": True},
+                              "relationships": {"territory": {"data": {"type": "territories", "id": t}}}}
+                             for t in territories]})
+            return f"(all {len(territories)} territories, and new ones as Apple adds them)"
+        except ASCError as e:
+            if "409" not in str(e):
+                raise
+        # Availability already exists: switch every territory on individually.
+        avail = call("GET", f"/apps/{app_id}/appAvailabilityV2")["data"]
+        changed, total = 0, 0
+        url = f"/v2/appAvailabilities/{avail['id']}/territoryAvailabilities?limit=200"
+        while url:
+            page = call("GET", url)
+            for ta in page["data"]:
+                total += 1
+                if not ta["attributes"].get("available"):
+                    call("PATCH", f"/territoryAvailabilities/{ta['id']}", {"data": {
+                        "type": "territoryAvailabilities", "id": ta["id"], "attributes": {"available": True}}})
+                    changed += 1
+            nxt = page.get("links", {}).get("next")
+            url = ("/v2" + nxt.split("/v2", 1)[1]) if nxt else None
+        return f"(all {total} territories available; {changed} switched on)"
+
     parts = [("app_info", "App name, subtitle, privacy policy URL", app_info_localization),
              ("version_text", "Description, keywords, promotional text, URLs", version_localization),
              ("copyright", "Copyright", copyright_),
@@ -218,7 +274,9 @@ def main():
              ("content_rights", "Content rights", content_rights),
              ("age_rating", "Age rating", age_rating),
              ("review_notes", "App Review notes", review_notes),
-             ("build", "Build for this version", build)]
+             ("build", "Build for this version", build),
+             ("pricing", "Price: Free", pricing),
+             ("availability", "Availability: all territories", availability)]
     only = {p.strip() for p in os.environ.get("ONLY", "").split(",") if p.strip()}
     for key, name, fn in parts:
         if not only or key in only:
