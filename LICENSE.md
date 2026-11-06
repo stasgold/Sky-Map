@@ -1,9 +1,9 @@
 SPDX-License-Identifier: GPL-3.0-or-later
 
-Stellar Navigator for iOS — a Swift port of Sky Map v2 (https://github.com/sky-map-team/stardroid).
+Star Nav for iOS — a Swift port of Sky Map v2 (https://github.com/sky-map-team/stardroid).
 
 Copyright (c) 2026 Penterakt LLC and contributors (the original Kotlin program and its data).
-Copyright (c) 2026 the Stellar Navigator for iOS contributors (the Swift port).
+Copyright (c) 2026 the Star Nav for iOS contributors (the Swift port).
 
 This program is free software: you can redistribute it and/or modify it under the terms of the
 GNU General Public License as published by the Free Software Foundation, either version 3 of the

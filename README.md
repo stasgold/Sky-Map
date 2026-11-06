@@ -1,4 +1,4 @@
-# Stellar Navigator for iOS
+# Star Nav for iOS
 
 An iOS port of **[Sky Map v2](https://github.com/sky-map-team/stardroid/tree/master/stardroid-v2)**,
 the open-source Android planetarium: point your phone at the sky and see the stars,
@@ -7,9 +7,9 @@ with no account and no ads.
 
 > **Name:** "Sky Map" and its icons are trademarks/reserved assets of Penterakt LLC, and
 > upstream's license requires independent distributions to use a distinct name and identity. So
-> this port ships as **Stellar Navigator**, with its own icon and marker glyphs. (The bundle
-> identifier, `io.github.stasgold.skyatlas`, predates the rename and is kept because the App Store
-> Connect record is tied to it; it is never shown to users.) See [LICENSE.md](LICENSE.md) and
+> this port ships as **Star Nav**, with its own icon and marker glyphs. (The bundle
+> identifier, `io.github.stasgold.skyatlas`, predates the renames and is kept because the App Store
+> Connect record is tied to it; it is never shown to users. The Xcode project, target and scheme are still named `StellarNavigator`.) See [LICENSE.md](LICENSE.md) and
 > [NOTICE.md](NOTICE.md).
 
 ## Features

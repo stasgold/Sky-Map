@@ -1,4 +1,4 @@
-# Generates the Stellar Navigator app icon (original artwork, GPL-3.0-or-later).
+# Generates the Star Nav app icon (original artwork, GPL-3.0-or-later).
 # Usage: python3 tools/make_icon.py StellarNavigator/Assets.xcassets/AppIcon.appiconset/AppIcon.png
 # Requires Pillow. Renders at 4x and downsamples for clean edges.
 import math, random, sys
