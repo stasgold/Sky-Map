@@ -6,6 +6,11 @@ name: Upload screenshots to App Store Connect
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "upload = replace all; verify = report states and re-upload only failed ones"
+        required: false
+        default: "upload"
 
 jobs:
   upload:
@@ -23,6 +28,7 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
           BUNDLE_ID: io.github.stasgold.skyatlas
+          MODE: ${{ inputs.mode }}
         run: |
           python3 tools/asc_upload_screenshots.py \
             APP_IPHONE_67=shots/iphone-6.9 \

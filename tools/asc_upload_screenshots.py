@@ -110,9 +110,32 @@ def main():
                 "relationships": {"appStoreVersionLocalization": {"data": {
                     "type": "appStoreVersionLocalizations", "id": loc["id"]}}}}})["data"]
         existing = call("GET", f"/appScreenshotSets/{sset['id']}/appScreenshots")["data"]
-        for shot in existing:
-            call("DELETE", f"/appScreenshots/{shot['id']}")
-        print(f"\n{display_type}: replacing {len(existing)} with {len(files)} from {folder}")
+        if os.environ.get("MODE") == "verify":
+            # Report each screenshot's processing state; re-upload only the ones Apple failed.
+            by_name = {f.name: f for f in files}
+            print(f"\n{display_type}: {len(existing)} screenshot(s)")
+            redo = []
+            for shot in existing:
+                st = (shot["attributes"].get("assetDeliveryState") or {})
+                name = shot["attributes"].get("fileName")
+                print(f"  {name}: {st.get('state')}")
+                if st.get("state") == "FAILED":
+                    redo.append(shot)
+            missing = sorted(set(by_name) - {s["attributes"].get("fileName") for s in existing})
+            for shot in redo:
+                call("DELETE", f"/appScreenshots/{shot['id']}")
+            files = [by_name[n] for n in sorted({s["attributes"]["fileName"] for s in redo} | set(missing))
+                     if n in by_name]
+            if not files:
+                pending = [s for s in existing if (s["attributes"].get("assetDeliveryState") or {}).get("state")
+                           != "COMPLETE"]
+                failures += len(pending)
+                continue
+            print(f"  re-uploading: {', '.join(f.name for f in files)}")
+        else:
+            for shot in existing:
+                call("DELETE", f"/appScreenshots/{shot['id']}")
+            print(f"\n{display_type}: replacing {len(existing)} with {len(files)} from {folder}")
 
         uploaded = []
         for f in files:
@@ -134,7 +157,7 @@ def main():
 
         # Wait for Apple to process each image.
         for name, sid in uploaded:
-            for _ in range(60):
+            for _ in range(120):
                 st = call("GET", f"/appScreenshots/{sid}")["data"]["attributes"].get("assetDeliveryState") or {}
                 if st.get("state") in ("COMPLETE", "FAILED"):
                     break
@@ -145,7 +168,7 @@ def main():
                 failures += 1
                 print(f"  ::error::{name}: {st.get('state')} {json.dumps(st.get('errors') or st.get('warnings'))}")
     if failures:
-        sys.exit(f"{failures} screenshot(s) were not accepted.")
+        sys.exit(f"{failures} screenshot(s) not processed yet or not accepted (run again with MODE=verify).")
     print("\nAll screenshots uploaded and processed.")
 
 
