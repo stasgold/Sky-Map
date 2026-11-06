@@ -154,10 +154,32 @@ def main():
         present = decl["attributes"]
         attrs = {k: "NONE" for k in enums if k in present}
         attrs.update({k: False for k in booleans if k in present})
+        # Apple adds questions over time and reports a missing one per request; answer each
+        # newly required question too. Every one so far is about a feature this app does not
+        # have (social media, messaging, ads, ...), so "no" (or "NONE") is the true answer.
+        added = []
+        for _ in range(25):
+            try:
+                call("PATCH", f"/ageRatingDeclarations/{decl['id']}", {"data": {
+                    "type": "ageRatingDeclarations", "id": decl["id"], "attributes": attrs}})
+                break
+            except ASCError as e:
+                text = str(e)
+                m = re.search(r"value for the attribute '(\w+)'", text)
+                t = re.search(r"attribute '(\w+)'\. Expected a STRING", text)
+                if m and m.group(1) not in attrs:
+                    attrs[m.group(1)] = False
+                    added.append(m.group(1))
+                elif t and attrs.get(t.group(1)) is False:
+                    attrs[t.group(1)] = "NONE"
+                else:
+                    raise
+        else:
+            raise ASCError("age rating: too many newly required questions")
         untouched = sorted(k for k in present if k not in attrs)
-        call("PATCH", f"/ageRatingDeclarations/{decl['id']}", {"data": {
-            "type": "ageRatingDeclarations", "id": decl["id"], "attributes": attrs}})
-        return f"({len(attrs)} questions answered none/no; left as is: {', '.join(untouched) or 'none'})"
+        return (f"({len(attrs)} questions answered none/no"
+                + (f"; newly required, answered no: {', '.join(added)}" if added else "")
+                + f"; left as is: {', '.join(untouched) or 'none'})")
 
     def review_notes():
         try:
