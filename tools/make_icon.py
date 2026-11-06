@@ -3,7 +3,7 @@
 # Requires Pillow. Renders at 4x and downsamples for clean edges.
 #
 # A flat compass over the night sky: a bold azimuth ring with cross-ticks, a segmented inner
-# ring, a faceted eight-point crystal star with gold rays and a warm core, and a scatter of stars (gold sparkles, ringed bright
+# ring, an eight-point compass-rose star with faceted crystal points and gold rays, and a scatter of stars (gold sparkles, ringed bright
 # stars and small dots).
 import math
 import sys
@@ -88,46 +88,87 @@ for k in range(8):
 img = Image.alpha_composite(img, inner)
 
 
-# --- Crystal compass star: eight faceted points, gold rays between, warm core -----------
-def point(bearing, length, hw):
-    tip = polar(length, bearing)
-    left = polar(hw, bearing - 90)
-    right = polar(hw, bearing + 90)
-    return [(C, C), left, tip], [(C, C), tip, right]
+# --- Compass rose star -----------------------------------------------------------------
+# Each of the eight points is a kite: centre -> shoulder -> tip -> shoulder. Neighbouring
+# points share their shoulders (radius 0.132, at 22.5° + 45°k), where slim gold rays sit.
+# Every point is split along its axis into a light half (counter-clockwise) and a cool half
+# (clockwise); the diagonals also have an inner facet whose shading flips, which gives the
+# crystal look. Facets shade with distance from the centre: warm gold at the core, then
+# white or blue toward the tips. Colours were sampled from the reference artwork.
+import numpy as np
+
+SHOULDER_R = 0.132
+CARDINAL_TIP = 0.356
+DIAGONAL_TIP = 0.313
+DIAG_SPLIT_R = 0.09
+
+GRADIENTS = {  # radius (fraction of icon width) -> RGB
+    "card_light": [(0.0, (240, 202, 150)), (0.06, (237, 222, 200)), (0.10, (230, 236, 240)),
+                   (0.15, (234, 243, 252)), (0.22, (243, 247, 252)), (0.34, (251, 253, 252))],
+    "card_dark": [(0.0, (241, 209, 168)), (0.05, (196, 186, 172)), (0.08, (140, 168, 210)),
+                  (0.15, (140, 194, 238)), (0.22, (168, 222, 244)), (0.34, (190, 233, 245))],
+    "diag_light": [(0.0, (236, 214, 176)), (0.10, (200, 233, 252)), (0.15, (214, 237, 251)),
+                   (0.22, (240, 250, 255)), (0.30, (246, 252, 255))],
+    "diag_dark": [(0.0, (200, 190, 190)), (0.10, (121, 159, 234)), (0.15, (128, 172, 235)),
+                  (0.22, (165, 210, 241)), (0.30, (182, 221, 245))],
+    "diag_inner_teal": [(0.0, (232, 202, 160)), (0.05, (170, 204, 216)), (0.09, (166, 210, 232))],
+    "diag_inner_white": [(0.0, (242, 228, 196)), (0.05, (240, 244, 240)), (0.09, (236, 245, 250))],
+    "ray_light": [(0.0, (200, 172, 128)), (0.25, (200, 172, 128))],
+    "ray_dark": [(0.0, (150, 130, 122)), (0.25, (150, 130, 122))],
+}
+
+yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
+radius = np.hypot(xx - C, yy - C) / S
+del xx, yy
+
+
+def shade(img, polys, stops):
+    """Fill the polygons with a colour that varies with distance from the centre."""
+    mask = Image.new("L", (S, S), 0)
+    md = ImageDraw.Draw(mask)
+    for poly in polys:
+        md.polygon(poly, fill=255)
+    rs = [r for r, _ in stops]
+    rgb = np.stack([np.interp(radius, rs, [c[i] for _, c in stops]) for i in range(3)], axis=-1)
+    layer = Image.fromarray(rgb.astype(np.uint8), "RGB").convert("RGBA")
+    layer.putalpha(mask)
+    return Image.alpha_composite(img, layer)
 
 
 img = Image.alpha_composite(img, soft_disc((C, C), S * 0.17, (90, 160, 240), 110, S * 0.08))
-star = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-sd = ImageDraw.Draw(star)
-for k in range(8):  # slim gold rays in the gaps between the points
-    lit, dark = point(22.5 + 45 * k, S * 0.19, S * 0.014)
-    sd.polygon(lit, fill=(250, 206, 130, 255))
-    sd.polygon(dark, fill=(196, 140, 70, 255))
-for k in range(4):  # diagonal points, a little shorter
-    lit, dark = point(45 + 90 * k, S * 0.275, S * 0.052)
-    sd.polygon(lit, fill=WHITE + (255,))
-    sd.polygon(dark, fill=(168, 206, 244, 255))
-for k in range(4):  # cardinal points
-    lit, dark = point(90 * k, S * 0.335, S * 0.060)
-    sd.polygon(lit, fill=WHITE + (255,))
-    sd.polygon(dark, fill=ICE + (255,))
-img = Image.alpha_composite(img, glow_of(star, (140, 190, 255), SS * 12, 0.35))
-img = Image.alpha_composite(img, star)
 
-# Warm core: a golden glow where the facets meet, fading out along the points, with a
-# fine gold seam down the ridge of each point.
-seams = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-sm = ImageDraw.Draw(seams)
+facets = {k: [] for k in GRADIENTS}
+centre = (C, C)
+for k in range(8):  # gold rays between the points, starting at the shared shoulders
+    b = 22.5 + 45 * k
+    base_l, base_r = polar(S * SHOULDER_R, b - 4.2), polar(S * SHOULDER_R, b + 4.2)
+    mid = polar(S * SHOULDER_R, b)
+    tip = polar(S * 0.215, b)
+    facets["ray_dark"].append([centre, base_l, tip, mid])
+    facets["ray_light"].append([centre, mid, tip, base_r])
 for k in range(8):
-    length = S * (0.335 if k % 2 == 0 else 0.275) * 0.55
-    sm.line([(C, C), polar(length, 45 * k)], fill=(246, 184, 92, 150), width=int(3 * SS))
-fade = Image.new("L", (S, S), 0)
-ImageDraw.Draw(fade).ellipse([C - S * 0.19, C - S * 0.19, C + S * 0.19, C + S * 0.19], fill=255)
-fade = fade.filter(ImageFilter.GaussianBlur(S * 0.06))
-seams.putalpha(Image.composite(seams.getchannel("A"), Image.new("L", (S, S), 0), fade))
-img = Image.alpha_composite(img, seams)
-img = Image.alpha_composite(img, soft_disc((C, C), S * 0.075, (246, 184, 92), 170, S * 0.035))
-img = Image.alpha_composite(img, soft_disc((C, C), S * 0.022, (255, 248, 230), 255, S * 0.010))
+    b = 45 * k
+    cardinal = k % 2 == 0
+    tip = polar(S * (CARDINAL_TIP if cardinal else DIAGONAL_TIP), b)
+    left = polar(S * SHOULDER_R, b - 22.5)   # counter-clockwise shoulder
+    right = polar(S * SHOULDER_R, b + 22.5)  # clockwise shoulder
+    if cardinal:
+        facets["card_light"].append([centre, left, tip])
+        facets["card_dark"].append([centre, tip, right])
+    else:
+        split = polar(S * DIAG_SPLIT_R, b)
+        facets["diag_light"].append([split, left, tip])
+        facets["diag_dark"].append([split, tip, right])
+        facets["diag_inner_teal"].append([centre, left, split])
+        facets["diag_inner_white"].append([centre, split, right])
+
+star_only = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+for name in ("ray_dark", "ray_light", "diag_light", "diag_dark", "diag_inner_teal",
+             "diag_inner_white", "card_light", "card_dark"):
+    star_only = shade(star_only, facets[name], GRADIENTS[name])
+del radius
+img = Image.alpha_composite(img, glow_of(star_only, (150, 200, 255), SS * 8, 0.12))
+img = Image.alpha_composite(img, star_only)
 
 
 # --- Stars -----------------------------------------------------------------------------
