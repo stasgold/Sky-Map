@@ -114,7 +114,7 @@ def point(cx, cy, ang, length, hw):
     return [(cx, cy), l, tip], [(cx, cy), tip, r]
 
 
-cr = S * 0.21
+cr = S * 0.357
 img = Image.alpha_composite(img, soft_disc((C, C), cr * 0.75, CYAN, 120, cr * 0.45))
 comp = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 cd = ImageDraw.Draw(comp)
