@@ -87,27 +87,28 @@ encryption beyond what iOS provides. App Store Connect will not ask again.
 >   independent iOS port of an open-source Android planetarium and uses its own name and
 >   artwork; third-party imagery is credited under ⋯ → About & Credits.
 
-## Screenshots (you must supply these)
+## Screenshots
 
-Required because the app runs on iPhone **and iPad**:
+Generated from the real app by the **App Store screenshots** workflow (Actions tab →
+"App Store screenshots" → Run workflow), which drives the app's real screens in the iOS
+Simulator with a UI test at a place where it is late evening at run time. Download them from
+the [`app-store-screenshots` branch](https://github.com/stasgold/Sky-Map/tree/app-store-screenshots)
+or the run's `screenshots` artifact:
 
-| Device class | Size (portrait) | How |
+| Folder | Device class in App Store Connect | Size |
 |---|---|---|
-| iPhone 6.9" | 1320 × 2868 | iPhone 16/17 Pro Max, or that Simulator |
-| iPad 13" | 2064 × 2752 | iPad Pro 13", or that Simulator |
+| `iphone-6.9/` | iPhone 6.9" display | 1320 × 2868 |
+| `ipad-13/` | iPad 13" display | 2064 × 2752 |
 
-Take them from the **running app** (side button + volume up on a device, or ⌘S in the
-Simulator). Apple rejects mock-ups that don't show the actual app. Good shots: the live sky
-with constellations, an info card (e.g. Jupiter or M31), search results, time travel, and night
-mode. In the Simulator the app starts in manual mode, since there are no motion sensors.
-
-If you would rather not provide iPad screenshots, the app can be made iPhone-only
-(`TARGETED_DEVICE_FAMILY = 1`) before submitting.
+Seven screens each: `01-sky`, `02-info-card`, `03-search`, `04-find-orion`, `05-layers`,
+`06-time-travel`, `07-night-mode`. Upload them in that order (or drop any you don't want;
+the minimum is one per device class).
 
 ## Before you press Submit
 
 - [ ] Name in App Store Connect → App Information is **Star Nav**
-- [ ] Build **1.0.0** selected on the version page (run the TestFlight workflow first)
+- [ ] Build **1.0.0 (12 or later)** selected on the version page; builds 11 and earlier have the
+      info-card crash fixed in 12
 - [ ] Screenshots uploaded for each required device class
 - [ ] Privacy Policy URL set, App Privacy answered "Data Not Collected"
 - [ ] Age rating questionnaire completed
