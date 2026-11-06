@@ -1,0 +1,29 @@
+name: Upload screenshots to App Store Connect
+
+# Uploads the screenshots on the app-store-screenshots branch (made by the
+# "App Store screenshots" workflow) into the editable App Store version's screenshot sets,
+# replacing what is there. Uses the same API key secrets as the TestFlight workflow.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: app-store-screenshots
+          path: shots
+      - run: pip install --quiet "pyjwt[crypto]"
+      - name: Upload
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          BUNDLE_ID: io.github.stasgold.skyatlas
+        run: |
+          python3 tools/asc_upload_screenshots.py \
+            APP_IPHONE_67=shots/iphone-6.9 \
+            APP_IPAD_PRO_3GEN_129=shots/ipad-13
