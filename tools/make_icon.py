@@ -3,7 +3,7 @@
 # Requires Pillow. Renders at 4x and downsamples for clean edges.
 #
 # A schematic star chart: an azimuthal grid with a degree ring, three real constellation
-# figures (Big Dipper, Cassiopeia, Cygnus) drawn from their J2000 positions, and a compass
+# figures (Big Dipper, Cassiopeia, Cygnus, Cepheus) drawn from their J2000 positions, and a compass
 # star at the centre.
 import math
 import random
@@ -119,6 +119,11 @@ FIGURES = [
          mags=[1.3, 2.2, 2.5, 2.9, 3.1],
          lines=[(0, 1), (1, 4), (3, 1), (1, 2)],
          center=(S * 0.32, S * 0.69), scale=S * 0.0105, rot=-30, color=GOLD),
+    # Cepheus: Alderamin, Alfirk, Errai, Iota Cep, Zeta Cep (the "house").
+    dict(stars=[(319.64, 62.59), (322.16, 70.56), (354.84, 77.63), (342.42, 66.20), (332.71, 58.20)],
+         mags=[2.5, 3.2, 3.2, 3.5, 3.4],
+         lines=[(0, 1), (1, 2), (2, 3), (3, 4), (4, 0), (1, 3)],
+         center=(S * 0.715, S * 0.32), scale=S * 0.0092, rot=40, color=CYAN),
 ]
 
 lines = Image.new("RGBA", (S, S), (0, 0, 0, 0))
@@ -186,7 +191,7 @@ def sparkle(img, x, y, length, color):
     return Image.alpha_composite(img, soft_disc((x, y), length * 0.12, WHITE, 255, length * 0.05))
 
 
-for x, y, l in ((S * 0.72, S * 0.27, S * 0.032), (S * 0.86, S * 0.52, S * 0.03), (S * 0.15, S * 0.50, S * 0.024), (S * 0.53, S * 0.88, S * 0.022)):
+for x, y, l in ((S * 0.86, S * 0.52, S * 0.03), (S * 0.15, S * 0.50, S * 0.024), (S * 0.53, S * 0.88, S * 0.022)):
     img = sparkle(img, x, y, l, WHITE)
 
 out = img.convert("RGB").resize((1024, 1024), Image.LANCZOS)
