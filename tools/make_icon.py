@@ -2,9 +2,8 @@
 # Usage: python3 tools/make_icon.py StellarNavigator/Assets.xcassets/AppIcon.appiconset/AppIcon.png
 # Requires Pillow. Renders at 4x and downsamples for clean edges.
 #
-# A schematic star chart: an azimuthal grid with a degree ring, three real constellation
-# figures (Big Dipper, Cassiopeia, Cygnus, Cepheus) drawn from their J2000 positions, and a compass
-# star at the centre.
+# A schematic star chart: an azimuthal grid with a bold degree ring, a scatter of
+# unconnected stars sized by brightness, and a large compass star at the centre.
 import math
 import random
 import sys
@@ -86,63 +85,25 @@ img = Image.alpha_composite(img, glow_of(grid, GRID, SS * 6, 0.6))
 img = Image.alpha_composite(img, grid)
 
 
-# --- Constellations from real J2000 positions --------------------------------------------
-def project(stars, center, scale, rotate_deg):
-    """Gnomonic-ish local projection of (ra, dec) around the figure's mean, east to the left."""
-    ra0 = sum(s[0] for s in stars) / len(stars)
-    de0 = sum(s[1] for s in stars) / len(stars)
-    rot = math.radians(rotate_deg)
-    out = []
-    for ra, de in stars:
-        x = -(ra - ra0) * math.cos(math.radians(de0))
-        y = -(de - de0)
-        xr = x * math.cos(rot) - y * math.sin(rot)
-        yr = x * math.sin(rot) + y * math.cos(rot)
-        out.append((center[0] + xr * scale, center[1] + yr * scale))
-    return out
-
-
-FIGURES = [
-    # Big Dipper: Dubhe, Merak, Phecda, Megrez, Alioth, Mizar, Alkaid (magnitudes for dot size).
-    dict(stars=[(165.93, 61.75), (165.46, 56.38), (178.46, 53.69), (183.86, 57.03), (193.51, 55.96),
-                (200.98, 54.93), (206.89, 49.31)],
-         mags=[1.8, 2.4, 2.4, 3.3, 1.8, 2.2, 1.9],
-         lines=[(0, 1), (1, 2), (2, 3), (3, 0), (3, 4), (4, 5), (5, 6)],
-         center=(S * 0.33, S * 0.31), scale=S * 0.0105, rot=-18, color=GOLD),
-    # Cassiopeia: Caph, Schedar, Navi, Ruchbah, Segin.
-    dict(stars=[(2.29, 59.15), (10.13, 56.54), (14.18, 60.72), (21.45, 60.24), (28.60, 63.67)],
-         mags=[2.3, 2.2, 2.5, 2.7, 3.4],
-         lines=[(0, 1), (1, 2), (2, 3), (3, 4)],
-         center=(S * 0.66, S * 0.68), scale=S * 0.0135, rot=8, color=CYAN),
-    # Cygnus: Deneb, Sadr, Gienah, Delta Cyg, Albireo.
-    dict(stars=[(310.36, 45.28), (305.56, 40.26), (311.55, 33.97), (296.24, 45.13), (292.68, 27.96)],
-         mags=[1.3, 2.2, 2.5, 2.9, 3.1],
-         lines=[(0, 1), (1, 4), (3, 1), (1, 2)],
-         center=(S * 0.32, S * 0.69), scale=S * 0.0105, rot=-30, color=GOLD),
-    # Cepheus: Alderamin, Alfirk, Errai, Iota Cep, Zeta Cep (the "house").
-    dict(stars=[(319.64, 62.59), (322.16, 70.56), (354.84, 77.63), (342.42, 66.20), (332.71, 58.20)],
-         mags=[2.5, 3.2, 3.2, 3.5, 3.4],
-         lines=[(0, 1), (1, 2), (2, 3), (3, 4), (4, 0), (1, 3)],
-         center=(S * 0.715, S * 0.32), scale=S * 0.0092, rot=40, color=CYAN),
+# --- Chart stars: unconnected dots sized by brightness (star-chart convention) ---------
+# (x, y) as fractions of the icon, magnitude-like size class 1 (brightest) .. 4, colour.
+CHART_STARS = [
+    (0.30, 0.27, 1, GOLD), (0.42, 0.21, 3, WHITE), (0.22, 0.38, 2, WHITE), (0.36, 0.38, 4, WHITE),
+    (0.70, 0.25, 2, CYAN), (0.79, 0.36, 3, WHITE), (0.62, 0.17, 4, WHITE),
+    (0.26, 0.68, 2, WHITE), (0.37, 0.79, 3, GOLD), (0.19, 0.58, 4, WHITE),
+    (0.72, 0.73, 1, CYAN), (0.63, 0.83, 3, WHITE), (0.82, 0.63, 4, WHITE), (0.58, 0.66, 4, WHITE),
 ]
+RADIUS_BY_CLASS = {1: 0.0145, 2: 0.0110, 3: 0.0080, 4: 0.0058}
 
-lines = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-ld = ImageDraw.Draw(lines)
 dots = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 dd = ImageDraw.Draw(dots)
-for f in FIGURES:
-    pts = project(f["stars"], f["center"], f["scale"], f["rot"])
-    for a, b in f["lines"]:
-        ld.line([pts[a], pts[b]], fill=f["color"] + (235,), width=int(4.5 * SS))
-    for (x, y), m in zip(pts, f["mags"]):
-        r = S * (0.0115 - 0.0019 * (m - 1.3))
-        dd.ellipse([x - r, y - r, x + r, y + r], fill=WHITE + (255,))
-        dd.ellipse([x - r * 1.7, y - r * 1.7, x + r * 1.7, y + r * 1.7], outline=f["color"] + (150,), width=int(1.8 * SS))
-img = Image.alpha_composite(img, glow_of(lines, GOLD, SS * 8, 0.55))
-img = Image.alpha_composite(img, lines)
+for fx, fy, cls, colour in CHART_STARS:
+    x, y, r = S * fx, S * fy, S * RADIUS_BY_CLASS[cls]
+    dd.ellipse([x - r, y - r, x + r, y + r], fill=colour + (255,))
+    if cls <= 2:
+        dd.ellipse([x - r * 1.8, y - r * 1.8, x + r * 1.8, y + r * 1.8], outline=colour + (140,), width=int(1.8 * SS))
 img = Image.alpha_composite(img, glow_of(dots, WHITE, SS * 10, 0.9))
 img = Image.alpha_composite(img, dots)
-
 
 # --- Compass star at the chart centre -------------------------------------------------
 def point(cx, cy, ang, length, hw):
@@ -153,7 +114,7 @@ def point(cx, cy, ang, length, hw):
     return [(cx, cy), l, tip], [(cx, cy), tip, r]
 
 
-cr = S * 0.15
+cr = S * 0.21
 img = Image.alpha_composite(img, soft_disc((C, C), cr * 0.75, CYAN, 120, cr * 0.45))
 comp = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 cd = ImageDraw.Draw(comp)
@@ -191,8 +152,9 @@ def sparkle(img, x, y, length, color):
     return Image.alpha_composite(img, soft_disc((x, y), length * 0.12, WHITE, 255, length * 0.05))
 
 
-for x, y, l in ((S * 0.86, S * 0.52, S * 0.03), (S * 0.15, S * 0.50, S * 0.024), (S * 0.53, S * 0.88, S * 0.022)):
-    img = sparkle(img, x, y, l, WHITE)
+for fx, fy, cls, colour in CHART_STARS:
+    if cls == 1:
+        img = sparkle(img, S * fx, S * fy, S * 0.045, WHITE)
 
 out = img.convert("RGB").resize((1024, 1024), Image.LANCZOS)
 out.save(sys.argv[1])
