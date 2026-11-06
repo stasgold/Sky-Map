@@ -3,8 +3,8 @@
 # Requires Pillow. Renders at 4x and downsamples for clean edges.
 #
 # A schematic star chart: an azimuthal grid with a degree ring, three real constellation
-# figures (Big Dipper, Cassiopeia, Cygnus) drawn from their J2000 positions, a compass star
-# in an inset ring, and a bright star at the centre.
+# figures (Big Dipper, Cassiopeia, Cygnus) drawn from their J2000 positions, and a compass
+# star at the centre.
 import math
 import random
 import sys
@@ -64,9 +64,9 @@ R = S * 0.415
 grid = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 g = ImageDraw.Draw(grid)
 lw = int(3.2 * SS)
-for frac, a in ((1.0, 150), (0.68, 95), (0.36, 80)):
+for frac, a, w in ((1.0, 235, int(8 * SS)), (0.68, 95, lw), (0.36, 80, lw)):
     r = R * frac
-    g.ellipse([C - r, C - r, C + r, C + r], outline=GRID + (a,), width=lw)
+    g.ellipse([C - r, C - r, C + r, C + r], outline=GRID + (a,), width=w)
 for deg in range(0, 360, 30):
     t = math.radians(deg)
     g.line([(C, C), (C + R * math.cos(t), C + R * math.sin(t))], fill=GRID + (55,), width=int(2.4 * SS))
@@ -74,14 +74,14 @@ for deg in range(0, 360, 30):
 ext = R * 1.12
 g.line([(C - ext, C), (C + ext, C)], fill=GRID + (120,), width=lw)
 g.line([(C, C - ext), (C, C + ext)], fill=GRID + (120,), width=lw)
-# Degree ring: ticks every 5°, longer every 30°.
+# Degree ring (the azimuth scale): ticks every 5°, longer every 30°, drawn bold.
 for deg in range(0, 360, 5):
     t = math.radians(deg)
     major = deg % 30 == 0
-    r0 = R * (1.0 if major else 1.0)
-    r1 = R * (1.055 if major else 1.028)
+    r0 = R
+    r1 = R * (1.075 if major else 1.04)
     g.line([(C + r0 * math.cos(t), C + r0 * math.sin(t)), (C + r1 * math.cos(t), C + r1 * math.sin(t))],
-           fill=GRID + (170 if major else 110,), width=int((4 if major else 2.4) * SS))
+           fill=GRID + (240 if major else 170,), width=int((8 if major else 4.5) * SS))
 img = Image.alpha_composite(img, glow_of(grid, GRID, SS * 6, 0.6))
 img = Image.alpha_composite(img, grid)
 
@@ -139,7 +139,7 @@ img = Image.alpha_composite(img, glow_of(dots, WHITE, SS * 10, 0.9))
 img = Image.alpha_composite(img, dots)
 
 
-# --- Compass star in an inset ring (top right) ------------------------------------------
+# --- Compass star at the chart centre -------------------------------------------------
 def point(cx, cy, ang, length, hw):
     a = math.radians(ang)
     tip = (cx + length * math.cos(a), cy - length * math.sin(a))
@@ -148,20 +148,20 @@ def point(cx, cy, ang, length, hw):
     return [(cx, cy), l, tip], [(cx, cy), tip, r]
 
 
-cx, cy, cr = S * 0.705, S * 0.295, S * 0.125
+cr = S * 0.15
+img = Image.alpha_composite(img, soft_disc((C, C), cr * 0.75, CYAN, 120, cr * 0.45))
 comp = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 cd = ImageDraw.Draw(comp)
-cd.ellipse([cx - cr, cy - cr, cx + cr, cy + cr], fill=(14, 22, 70, 200), outline=CYAN + (220,), width=int(4 * SS))
-cd.ellipse([cx - cr * 0.86, cy - cr * 0.86, cx + cr * 0.86, cy + cr * 0.86], outline=CYAN + (90,), width=int(2.2 * SS))
 for k in range(4):
-    a, b = point(cx, cy, 45 + 90 * k, cr * 0.52, cr * 0.10)
+    a, b = point(C, C, 45 + 90 * k, cr * 0.55, cr * 0.10)
     cd.polygon(a, fill=(150, 200, 255, 255)); cd.polygon(b, fill=(80, 130, 220, 255))
 for k in range(4):
-    length = cr * (0.92 if k == 1 else 0.78)
-    a, b = point(cx, cy, 90 * k, length, cr * 0.15)
+    length = cr * (1.0 if k == 1 else 0.82)
+    a, b = point(C, C, 90 * k, length, cr * 0.15)
     cd.polygon(a, fill=WHITE + (255,)); cd.polygon(b, fill=CYAN + (255,))
 img = Image.alpha_composite(img, glow_of(comp, CYAN, SS * 12, 0.5))
 img = Image.alpha_composite(img, comp)
+img = Image.alpha_composite(img, soft_disc((C, C), cr * 0.07, WHITE, 255, cr * 0.03))
 
 # --- Bright star at the chart centre ------------------------------------------------------
 def sparkle(img, x, y, length, color):
@@ -186,8 +186,7 @@ def sparkle(img, x, y, length, color):
     return Image.alpha_composite(img, soft_disc((x, y), length * 0.12, WHITE, 255, length * 0.05))
 
 
-img = sparkle(img, C, C, S * 0.085, WHITE)
-for x, y, l in ((S * 0.86, S * 0.52, S * 0.03), (S * 0.15, S * 0.50, S * 0.024), (S * 0.53, S * 0.88, S * 0.022)):
+for x, y, l in ((S * 0.72, S * 0.27, S * 0.032), (S * 0.86, S * 0.52, S * 0.03), (S * 0.15, S * 0.50, S * 0.024), (S * 0.53, S * 0.88, S * 0.022)):
     img = sparkle(img, x, y, l, WHITE)
 
 out = img.convert("RGB").resize((1024, 1024), Image.LANCZOS)
