@@ -13,6 +13,10 @@ on:
         description: "Build to attach (blank = newest processed build)"
         required: false
         default: ""
+      only:
+        description: "Apply only these parts (comma-separated, e.g. age_rating; blank = all)"
+        required: false
+        default: ""
 
 jobs:
   listing:
@@ -27,4 +31,5 @@ jobs:
           ASC_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
           BUNDLE_ID: io.github.stasgold.skyatlas
           BUILD_NUMBER: ${{ inputs.build_number }}
+          ONLY: ${{ inputs.only }}
         run: python3 tools/asc_metadata.py

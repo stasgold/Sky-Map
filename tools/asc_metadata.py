@@ -11,7 +11,8 @@ separately and reported, so one rejected field does not stop the rest.
 App Store Connect has no API for the App Privacy questionnaire, so that stays a manual step,
 as do the App Review contact details (name, phone, e-mail), which are yours to give.
 
-Environment: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY (.p8 contents), BUNDLE_ID, optional BUILD_NUMBER.
+Environment: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY (.p8 contents), BUNDLE_ID, optional BUILD_NUMBER,
+optional ONLY (comma-separated part keys, e.g. age_rating) to apply just those parts.
 """
 import base64
 import json
@@ -142,25 +143,21 @@ def main():
 
     def age_rating():
         decl = call("GET", f"/appInfos/{info_id}/ageRatingDeclaration")["data"]
-        # Answer "none"/"no" to every content question. Enum questions take NONE; yes/no
-        # questions take false. Overrides and the kids band are left unset.
+        # Answer "none"/"no" to every content question Apple asks, by name. Fields that are not
+        # questions (rating-board identifiers, overrides, the kids band) are left untouched.
         enums = {"alcoholTobaccoOrDrugUseOrReferences", "contests", "gamblingSimulated", "gunsOrOtherWeapons",
                  "horrorOrFearThemes", "matureOrSuggestiveThemes", "medicalOrTreatmentInformation",
                  "profanityOrCrudeHumor", "sexualContentGraphicAndNudity", "sexualContentOrNudity",
                  "violenceCartoonOrFantasy", "violenceRealistic", "violenceRealisticProlongedGraphicOrSadistic"}
-        skip = {"kidsAgeBand", "ageRatingOverride", "ageRatingOverrideV2", "koreaAgeRatingOverride",
-                "developerAgeRatingInfoUrl", "seventeenPlus"}
-        attrs = {}
-        for k, v in decl["attributes"].items():
-            if k in skip:
-                continue
-            if k in enums or isinstance(v, str):
-                attrs[k] = "NONE"
-            elif isinstance(v, bool) or v is None:
-                attrs[k] = False
+        booleans = {"gambling", "unrestrictedWebAccess", "lootBox", "messagingAndChat", "parentalControls",
+                    "ageAssurance", "userGeneratedContent", "healthOrWellnessTopics", "advertising"}
+        present = decl["attributes"]
+        attrs = {k: "NONE" for k in enums if k in present}
+        attrs.update({k: False for k in booleans if k in present})
+        untouched = sorted(k for k in present if k not in attrs)
         call("PATCH", f"/ageRatingDeclarations/{decl['id']}", {"data": {
             "type": "ageRatingDeclarations", "id": decl["id"], "attributes": attrs}})
-        return f"({len(attrs)} questions answered none/no)"
+        return f"({len(attrs)} questions answered none/no; left as is: {', '.join(untouched) or 'none'})"
 
     def review_notes():
         try:
@@ -192,14 +189,18 @@ def main():
         call("PATCH", f"/appStoreVersions/{vid}/relationships/build", {"data": {"type": "builds", "id": b["id"]}})
         return f"(build {b['attributes']['version']})"
 
-    step("App name, subtitle, privacy policy URL", app_info_localization)
-    step("Description, keywords, promotional text, URLs", version_localization)
-    step("Copyright", copyright_)
-    step("Categories", categories)
-    step("Content rights", content_rights)
-    step("Age rating", age_rating)
-    step("App Review notes", review_notes)
-    step("Build for this version", build)
+    parts = [("app_info", "App name, subtitle, privacy policy URL", app_info_localization),
+             ("version_text", "Description, keywords, promotional text, URLs", version_localization),
+             ("copyright", "Copyright", copyright_),
+             ("categories", "Categories", categories),
+             ("content_rights", "Content rights", content_rights),
+             ("age_rating", "Age rating", age_rating),
+             ("review_notes", "App Review notes", review_notes),
+             ("build", "Build for this version", build)]
+    only = {p.strip() for p in os.environ.get("ONLY", "").split(",") if p.strip()}
+    for key, name, fn in parts:
+        if not only or key in only:
+            step(name, fn)
 
     failed = [r for r in results if not r[0]]
     print(f"\n{len(results) - len(failed)} of {len(results)} parts applied.")
