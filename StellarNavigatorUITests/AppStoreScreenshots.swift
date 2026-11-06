@@ -26,9 +26,14 @@ final class AppStoreScreenshots: XCTestCase {
             }
             return false
         }
+        // First launch: get the location fix (the app saves it), as any real first run would.
         app.launch()
         app.tap()
-        sleep(5) // let location, the catalog and the first frames settle
+        sleep(10)
+        app.terminate()
+        // Second launch starts at the saved location, like a returning user's.
+        app.launch()
+        sleep(5) // let the catalog and the first frames settle
     }
 
     private func shot(_ name: String) {
