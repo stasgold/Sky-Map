@@ -3,7 +3,7 @@
 # Requires Pillow. Renders at 4x and downsamples for clean edges.
 #
 # A flat compass over the night sky: a bold azimuth ring with cross-ticks, a segmented inner
-# ring, an eight-point compass star, and a scatter of stars (gold sparkles, ringed bright
+# ring, an eight-pointed star with equal points, and a scatter of stars (gold sparkles, ringed bright
 # stars and small dots).
 import math
 import sys
@@ -76,21 +76,21 @@ for deg in range(0, 360, 10):
     rd.line([polar(a, deg), polar(b, deg)], fill=RING + (255,), width=int(w * SS))
 img = Image.alpha_composite(img, ring)
 
-# --- Segmented inner ring, broken where the main points pass -----------------------------
+# --- Segmented inner ring, broken where the eight points pass -----------------------------
 r2 = S * 0.277
 inner = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 idr = ImageDraw.Draw(inner)
-gap = 9  # degrees either side of each cardinal
-for k in range(4):
-    start = 90 * k + gap
-    end = 90 * (k + 1) - gap
+gap = 9  # degrees either side of each of the eight points
+for k in range(8):
+    start = 45 * k + gap
+    end = 45 * (k + 1) - gap
     # PIL measures arcs from 3 o'clock, clockwise; convert from compass bearings.
     idr.arc([C - r2, C - r2, C + r2, C + r2], start=start - 90, end=end - 90,
             fill=RING + (115,), width=int(10 * SS))
 img = Image.alpha_composite(img, inner)
 
 
-# --- Eight-point compass star ------------------------------------------------------------
+# --- Eight-pointed star, all points equal ------------------------------------------------------------
 def point(bearing, length, hw):
     tip = polar(length, bearing)
     left = polar(hw, bearing - 90)
@@ -102,10 +102,10 @@ img = Image.alpha_composite(img, soft_disc((C, C), S * 0.16, (90, 160, 240), 110
 star = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 sd = ImageDraw.Draw(star)
 for k in range(4):
-    lit, dark = point(45 + 90 * k, S * 0.225, S * 0.040)
+    lit, dark = point(45 + 90 * k, S * 0.315, S * 0.058)
     sd.polygon(lit, fill=DIAG_LIT + (255,))
     sd.polygon(dark, fill=DIAG_DARK + (255,))
-for bearing, length in ((0, 0.335), (90, 0.315), (180, 0.31), (270, 0.315)):
+for bearing, length in ((0, 0.315), (90, 0.315), (180, 0.315), (270, 0.315)):
     lit, dark = point(bearing, S * length, S * 0.058)
     sd.polygon(lit, fill=WHITE + (255,))
     sd.polygon(dark, fill=ICE + (255,))
@@ -143,17 +143,19 @@ for fx, fy, col in ((0.219, 0.381, WHITE), (0.257, 0.676, WHITE), (0.698, 0.247,
     dd.ellipse([x - r, y - r, x + r, y + r], fill=col + (255,))
     dd.ellipse([x - r * 2.1, y - r * 2.1, x + r * 2.1, y + r * 2.1], outline=col + (130,), width=int(3 * SS))
 # Small dots.
-for fx, fy, col, rr in ((0.418, 0.211, WHITE, 0.0075), (0.619, 0.171, GOLD, 0.0060), (0.790, 0.359, GOLD, 0.0075),
+for fx, fy, col, rr in ((0.619, 0.171, GOLD, 0.0060), (0.790, 0.359, GOLD, 0.0075),
                         (0.188, 0.580, WHITE, 0.0060), (0.580, 0.660, GOLD, 0.0060), (0.819, 0.629, WHITE, 0.0065),
-                        (0.371, 0.788, GOLD, 0.0075), (0.629, 0.826, WHITE, 0.0075)):
+                        (0.371, 0.788, GOLD, 0.0075)):
     x, y, r = S * fx, S * fy, S * rr
     dd.ellipse([x - r, y - r, x + r, y + r], fill=col + (255,))
 img = Image.alpha_composite(img, glow_of(dots, WHITE, SS * 6, 0.6))
 img = Image.alpha_composite(img, dots)
 
 # Gold sparkles.
-img = sparkle(img, S * 0.289, S * 0.264, S * 0.045, GOLD)
-img = sparkle(img, S * 0.719, S * 0.728, S * 0.045, GOLD)
+# Placed in the gaps between points (bearings 337.5° and 157.5°) so no point touches them.
+for bearing in (337.5, 157.5):
+    x, y = polar(S * 0.305, bearing)
+    img = sparkle(img, x, y, S * 0.045, GOLD)
 
 out = img.convert("RGB").resize((1024, 1024), Image.LANCZOS)
 out.save(sys.argv[1])
