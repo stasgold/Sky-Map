@@ -133,12 +133,7 @@ final class AppModel: ObservableObject {
             Task { @MainActor in self?.locationDenied = status == .denied || status == .restricted }
         }
         sensorsAvailable = orientation.isAvailable
-        // Open looking at the southern (northern-hemisphere) or northern sky, a little up.
-        let frame = SkyModel.localFrame(Date(), location)
-        let az = location.latitudeDeg >= 0 ? 180.0 : 0.0
-        let los = frame.direction(azimuthDeg: az, altitudeDeg: 30)
-        let up = (frame.up - los * frame.up.dot(los)).normalized()
-        controller.setCamera(SkyCamera(lineOfSight: los, up: up, fovDeg: 60))
+        aimAtStartingView()
         applyLocationPreference()
         sensorMode = sensorsAvailable
         applySensorMode()
@@ -159,6 +154,28 @@ final class AppModel: ObservableObject {
 
     func returnToRealTime() { timeTravel = nil }
 
+    // MARK: Starting view
+
+    /// Set once the user moves the view themselves (gesture, search, or pointing the phone).
+    private var userMovedView = false
+
+    /// Looks at the southern sky (northern hemisphere) or the northern sky (southern), 30° up.
+    /// Re-applied when the location changes until the user moves the view, so the first fix
+    /// after launch can't leave a manual-mode view pointing at the ground.
+    private func aimAtStartingView() {
+        let frame = SkyModel.localFrame(now(), location)
+        let az = location.latitudeDeg >= 0 ? 180.0 : 0.0
+        let los = frame.direction(azimuthDeg: az, altitudeDeg: 30)
+        let up = (frame.up - los * frame.up.dot(los)).normalized()
+        let fov = userMovedView ? controller.camera.fovDeg : 60
+        controller.setCamera(SkyCamera(lineOfSight: los, up: up, fovDeg: fov))
+    }
+
+    private func locationChanged() {
+        invalidateTimeDependent()
+        if !userMovedView && !sensorMode { aimAtStartingView() }
+    }
+
     // MARK: Location
 
     private func applyLocationPreference() {
@@ -168,7 +185,7 @@ final class AppModel: ObservableObject {
             locationProvider.stop()
             location = manualLocation
             locationName = nil
-            invalidateTimeDependent()
+            locationChanged()
         }
     }
 
@@ -178,7 +195,7 @@ final class AppModel: ObservableObject {
         if let name { locationName = name }
         defaults.set(loc.latitudeDeg, forKey: "lastLat")
         defaults.set(loc.longitudeDeg, forKey: "lastLon")
-        invalidateTimeDependent()
+        locationChanged()
     }
 
     // MARK: Sensors and gestures
@@ -199,6 +216,7 @@ final class AppModel: ObservableObject {
 
     private func orientationSample(_ m: Matrix3) {
         guard sensorMode else { return }
+        userMovedView = true
         let frame = SkyModel.localFrame(now(), location)
         let p = SkyModel.pointing(frame, m, mode: viewDirection)
         // Light exponential smoothing on top of CoreMotion's own fusion.
@@ -211,9 +229,20 @@ final class AppModel: ObservableObject {
         controller.setSensorPointing(lineOfSight: los, up: up)
     }
 
-    func drag(dx: Double, dy: Double, shortSide: Double) { controller.drag(dx: dx, dy: dy, shortSide: shortSide) }
-    func pinch(_ ratio: Double) { controller.stretch(ratio) }
-    func rotate(_ degrees: Double) { controller.rotate(degrees: degrees) }
+    func drag(dx: Double, dy: Double, shortSide: Double) {
+        userMovedView = true
+        controller.drag(dx: dx, dy: dy, shortSide: shortSide)
+    }
+
+    func pinch(_ ratio: Double) {
+        userMovedView = true
+        controller.stretch(ratio)
+    }
+
+    func rotate(_ degrees: Double) {
+        userMovedView = true
+        controller.rotate(degrees: degrees)
+    }
     func touchDown() { controller.stop() }
 
     func gestureEnded(flingVx: Double = 0, flingVy: Double = 0, shortSide: Double) {
@@ -224,7 +253,10 @@ final class AppModel: ObservableObject {
         controller.gestureEnded(zenith: zenith)
     }
 
-    func zoom(by factor: Double) { controller.stretch(factor) }
+    func zoom(by factor: Double) {
+        userMovedView = true
+        controller.stretch(factor)
+    }
 
     /// Per display-refresh step.
     func tick(dt: Double) {
@@ -359,6 +391,7 @@ final class AppModel: ObservableObject {
     @discardableResult
     func go(to hit: SearchHit) -> Bool {
         guard let position = dynamicPosition(hit.id) ?? hit.position else { return false }
+        userMovedView = true
         searchTarget = hit
         if !sensorMode {
             controller.aim(at: position.toGeocentricVector(), fovDeg: hit.searchFovDeg)
