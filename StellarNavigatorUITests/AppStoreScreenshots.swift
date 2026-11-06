@@ -49,6 +49,21 @@ final class AppStoreScreenshots: XCTestCase {
         button.tap()
     }
 
+    /// Opens a sheet from the map's chrome and waits for it. A tap that lands while the previous
+    /// sheet is still sliding away is ignored by SwiftUI, so wait for the chrome to settle first
+    /// and tap once more if the sheet did not appear.
+    private func openSheet(_ label: String, expecting marker: String) {
+        for _ in 0..<3 {
+            sleep(1)
+            tap(label)
+            if app.buttons[marker].firstMatch.waitForExistence(timeout: 3)
+                || app.searchFields.firstMatch.waitForExistence(timeout: 1) {
+                return
+            }
+        }
+        XCTFail("sheet \(label) did not open")
+    }
+
     func testCaptureAppStoreScreens() {
         shot("01-sky")
 
@@ -103,14 +118,14 @@ final class AppStoreScreenshots: XCTestCase {
             sleep(1)
         }
 
-        tap("Layers")
-        sleep(2)
+        openSheet("Layers", expecting: "Done")
+        sleep(1)
         shot("06-layers")
         tap("Done")
         sleep(1)
 
-        tap("Time travel")
-        sleep(2)
+        openSheet("Time travel", expecting: "Done")
+        sleep(1)
         shot("07-time-travel")
         tap("Done")
         sleep(1)
