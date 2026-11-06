@@ -70,6 +70,22 @@ final class AppStoreScreenshots: XCTestCase {
             sleep(1)
         }
 
+        // A full list of results, with the keyboard put away.
+        tap("Search")
+        let field3 = app.searchFields.firstMatch
+        if field3.waitForExistence(timeout: 5) {
+            field3.tap()
+            field3.typeText("nebula\n") // the return key submits and dismisses the keyboard
+            sleep(1)
+            if app.keyboards.count > 0 {
+                app.cells.firstMatch.swipeDown()
+                sleep(1)
+            }
+            shot("04-search-results")
+            tap("Close")
+            sleep(1)
+        }
+
         // Search for a constellation and let the map glide to it.
         tap("Search")
         let field2 = app.searchFields.firstMatch
@@ -81,25 +97,25 @@ final class AppStoreScreenshots: XCTestCase {
             if hit.waitForExistence(timeout: 5) {
                 hit.tap()
                 sleep(3)
-                shot("04-find-orion")
+                shot("05-find-orion")
             }
         }
 
         tap("Layers")
         sleep(2)
-        shot("05-layers")
+        shot("06-layers")
         tap("Done")
         sleep(1)
 
         tap("Time travel")
         sleep(2)
-        shot("06-time-travel")
+        shot("07-time-travel")
         tap("Done")
         sleep(1)
 
         tap("Night mode")
         sleep(2)
-        shot("07-night-mode")
+        shot("08-night-mode")
         tap("Night mode") // leave the setting as it was
     }
 }
