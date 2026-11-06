@@ -1,0 +1,16 @@
+{
+  "locale": "en-US",
+  "name": "Star Nav",
+  "subtitle": "Live star map & sky guide",
+  "promotionalText": "Point your phone at the sky and see the stars, planets and constellations that are really there. Fully offline, no account, no ads.",
+  "description": "Star Nav is a real-time map of the night sky. Hold your phone up and the map follows where you point it, labelling the stars, constellations, planets and deep-sky objects in that part of the sky.\n\nSEE WHAT'S UP THERE\n• More than 3,000 stars, 88 constellations and 135 galaxies, nebulae and clusters\n• The Sun, the Moon and the planets in their true positions, with the Moon's real phase\n• Meteor showers shown while they are active\n• RA/Dec and alt/az grids, the horizon and the ecliptic, each easy to switch on or off\n\nFIND ANYTHING\n• Search by name or catalog designation: \"Andromeda\", \"M31\", \"Vega\"\n• Follow the arrow to your target, or let the map glide to it\n• Tap any object for a photo, a description, fun facts and when it next rises and sets\n\nEXPLORE TIME\n• Travel to any date from 1800 to 2049 and watch the sky move\n• Jump to the next sunset, sunrise, moonrise, full moon or new moon\n\nMADE FOR NIGHT USE\n• Night mode turns everything red to protect your dark-adapted eyes\n• Works entirely offline: no account, no ads, no tracking\n\nStar Nav is free, open-source software (GPLv3), built on an open-source Android planetarium. Imagery courtesy of NASA, ESA, ESO, the IAU and others, credited in the app.",
+  "keywords": "astronomy,stars,planets,constellations,night sky,stargazing,planetarium,telescope,moon,galaxy",
+  "supportUrl": "https://github.com/stasgold/Sky-Map/issues",
+  "marketingUrl": "https://github.com/stasgold/Sky-Map",
+  "privacyPolicyUrl": "https://github.com/stasgold/Sky-Map/blob/main/PRIVACY.md",
+  "copyright": "2026 Penterakt LLC and contributors",
+  "primaryCategory": "EDUCATION",
+  "secondaryCategory": "REFERENCE",
+  "contentRightsDeclaration": "USES_THIRD_PARTY_CONTENT",
+  "reviewNotes": "Star Nav is an offline planetarium. No login is required and there is no in-app purchase.\n\n• Point the device at the sky (or anywhere): the star map follows the device orientation using the motion sensors. Tap the hand/compass button (bottom right) to switch to manual mode, then drag to pan and pinch to zoom.\n• Location permission is optional; if denied, the app uses a default location, and one can be entered under ⋯ → Settings.\n• Try: Search (magnifier) → \"Moon\" or \"M31\"; tap any labelled object for its info card; Time Travel (clock icon) → \"Full Moon\".\n• All content is bundled; the app makes no network requests of its own.\n• The app is free software (GPLv3, source at https://github.com/stasgold/Sky-Map). It is an independent iOS port of an open-source Android planetarium and uses its own name and artwork; third-party imagery is credited under ⋯ → About & Credits."
+}

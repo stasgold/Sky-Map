@@ -1,6 +1,13 @@
 # App Store submission — Star Nav 1.0.0
 
-Everything App Store Connect asks for, ready to paste. Bundle ID `io.github.stasgold.skyatlas`.
+Everything App Store Connect asks for. Bundle ID `io.github.stasgold.skyatlas`.
+
+Most of it is applied automatically: the **Fill in the App Store listing** workflow sends
+`appstore/listing.json` (the listing, categories, content rights, age rating, review notes and
+build) through the App Store Connect API, and **Upload screenshots to App Store Connect** puts
+the screenshots in place. Only **App Privacy** and the **App Review contact details** have no
+API and must be entered by hand. Edit `appstore/listing.json` to change the listing; the text
+below mirrors it.
 
 ## Listing
 
