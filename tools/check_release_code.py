@@ -4,7 +4,9 @@
 Scans every Swift file compiled into the shipping app (the app target and the SkyCore
 library, not tests) for code that App Review's automated checks treat as suspicious:
 screenshot/demo modes with canned data, launch-argument or environment switches,
-simulator-only behaviour, private API access and runtime tricks, and dynamic code loading.
+simulator-only behaviour, private API access and runtime tricks, dynamic code loading,
+debug logging, and crash paths (a crash during review is a rejection). The one allowed
+fatalError is UIKit's never-called `init(coder:)` stub.
 
 Such code is only allowed inside `#if DEBUG ... #endif`, so it never compiles into a
 Release build. Exits non-zero, listing each offending line, if anything is found outside
@@ -28,6 +30,9 @@ RULES = [
      r"method_exchangeImplementations|class_replaceMethod|\b_UI[A-Z]|valueForKey\(\"_",
      "private API or runtime trick"),
     (r"JSContext|\beval\(|Bundle\(path:", "dynamic code loading"),
+    (r"(?<![A-Za-z_.])print\(|debugPrint\(|NSLog\(|(?<![A-Za-z_.])dump\(", "debug logging"),
+    (r"preconditionFailure|assertionFailure|try!", "crash path in release code"),
+    (r"fatalError\((?!\"init\(coder:\))", "crash path in release code"),
 ]
 COMPILED = [(re.compile(p, re.IGNORECASE), why) for p, why in RULES]
 

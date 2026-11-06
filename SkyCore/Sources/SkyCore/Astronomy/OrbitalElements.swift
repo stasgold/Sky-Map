@@ -72,7 +72,8 @@ private func trueAnomaly(_ m: Double, _ e: Double) -> Double {
     return normalizeRadians(v)
 }
 
-/// The osculating elements for `body` from JPL's two-term linear fits. Not defined for Sun/Moon.
+/// The osculating elements for `body` from JPL's two-term linear fits. The Sun and Moon have no
+/// heliocentric elements; asking for them returns Earth's, so a misuse can never crash.
 public func orbitalElements(_ body: SolarSystemBody, _ time: Date) -> OrbitalElements {
     let jc = time.julianCenturiesJ2000
     func el(_ a: Double, _ e: Double, _ i: Double, _ node: Double, _ peri: Double, _ l: Double) -> OrbitalElements {
@@ -113,7 +114,7 @@ public func orbitalElements(_ body: SolarSystemBody, _ time: Date) -> OrbitalEle
         return el(39.48211675 - 0.00031596 * jc, 0.24882730 + 0.00005170 * jc, 17.14001206 + 0.00004818 * jc,
                   110.30393684 - 0.01183482 * jc, 224.06891629 - 0.04062942 * jc, 238.92903833 + 145.20780515 * jc)
     case .sun, .moon:
-        preconditionFailure("\(body) has no heliocentric orbital elements")
+        return orbitalElements(.earth, time)
     }
 }
 

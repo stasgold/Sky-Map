@@ -56,9 +56,9 @@ public struct MonthDay: Comparable, Hashable, Sendable {
     /// The UTC calendar day of `date`.
     public init(utc date: Date) {
         var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = TimeZone(identifier: "UTC")!
+        cal.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
         let c = cal.dateComponents([.month, .day], from: date)
-        self.init(month: c.month!, day: c.day!)
+        self.init(month: c.month ?? 1, day: c.day ?? 1)
     }
 
     public static func < (a: MonthDay, b: MonthDay) -> Bool { (a.month, a.day) < (b.month, b.day) }

@@ -154,7 +154,9 @@ struct TimeTravelSheet: View {
     /// coarse browsing, but this port stays inside the validated window.
     private var dateRange: ClosedRange<Date> {
         let cal = Calendar(identifier: .gregorian)
-        return cal.date(from: DateComponents(year: 1800, month: 1, day: 2))!...cal.date(from: DateComponents(year: 2049, month: 12, day: 30))!
+        let start = cal.date(from: DateComponents(year: 1800, month: 1, day: 2)) ?? .distantPast
+        let end = cal.date(from: DateComponents(year: 2049, month: 12, day: 30)) ?? .distantFuture
+        return start...end
     }
 
     private func presetButton(_ title: String, _ compute: @escaping () -> Date?) -> some View {

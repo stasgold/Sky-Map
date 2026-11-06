@@ -182,7 +182,8 @@ public enum Identify {
             let sep = acos(tap.dot(c.position).clamped(-1, 1)) * radiansToDegrees
             let effective = max(0, sep - c.radiusDeg)
             guard effective <= toleranceDeg else { continue }
-            if best == nil || effective < best!.1 { best = (c.id, effective) }
+            if let current = best, current.1 <= effective { continue }
+            best = (c.id, effective)
         }
         return best?.0
     }

@@ -50,7 +50,8 @@ public struct KeplerianEphemeris: Ephemeris {
         switch body {
         case .moon: return RaDec.fromGeocentricVector(lunarGeocentricDirection(time))
         case .sun: return sunOrbitingPosition(.zero, time)
-        case .earth: preconditionFailure("Earth has no geocentric position")
+        // Earth is the observer, never a target; answer harmlessly rather than trap.
+        case .earth: return RaDec(0, 0)
         default: return sunOrbitingPosition(heliocentricCoordinates(orbitalElements(body, time)), time)
         }
     }
@@ -73,7 +74,7 @@ public struct KeplerianEphemeris: Ephemeris {
             // deliberate ~1% elongation approximation (with v1's inverted sign corrected).
             let antiSolar = heliocentricCoordinates(orbitalElements(.earth, time)).normalized()
             return acos(antiSolar.dot(moon).clamped(-1, 1)) * radiansToDegrees
-        case .earth: preconditionFailure("Earth has no phase angle")
+        case .earth: return 0.0
         default:
             let (planet, earth) = heliocentricPair(body, time)
             return planetPhaseAngleDeg(planet, earth)
@@ -84,7 +85,7 @@ public struct KeplerianEphemeris: Ephemeris {
         switch body {
         case .sun: return -27.0
         case .moon: return -10.0
-        case .earth: preconditionFailure("Earth has no magnitude")
+        case .earth: return 0.0
         default:
             let (planet, earth) = heliocentricPair(body, time)
             let earthDistance = planet.distance(to: earth)
