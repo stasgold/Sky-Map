@@ -18,14 +18,13 @@ struct SearchSheet: View {
     let dismiss: () -> Void
     @State private var query = ""
     @State private var results: [SearchHit] = []
-    @FocusState private var focused: Bool
+    @State private var infoId: String?
 
     var body: some View {
         NavigationStack {
             List(results) { hit in
                 Button {
-                    model.go(to: hit)
-                    dismiss()
+                    if model.go(to: hit) { dismiss() } else { infoId = hit.id }
                 } label: {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(hit.name).foregroundStyle(.primary)
@@ -33,7 +32,7 @@ struct SearchSheet: View {
                     }
                 }
                 .swipeActions {
-                    Button("Info") { dismiss(); model.showInfo(hit.id, afterSheetDismissal: true) }
+                    Button("Info") { infoId = hit.id }
                 }
             }
             .overlay {
@@ -47,6 +46,9 @@ struct SearchSheet: View {
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close", action: dismiss) } }
+            .navigationDestination(item: $infoId) { id in
+                ObjectInfoPage(model: model, id: id, close: dismiss)
+            }
         }
     }
 }
@@ -173,6 +175,10 @@ struct TimeTravelSheet: View {
 
 // MARK: - Object info
 
+/// The info card shown after tapping an object on the map. It is the only sheet open then, so
+/// it is presented on its own; from Search and the Gallery the same card is pushed inside
+/// their sheet instead (see `ObjectInfoPage`), so the app never presents one sheet while
+/// another is being dismissed.
 struct ObjectInfoSheet: View {
     @ObservedObject var model: AppModel
     let info: ObjectInfo
@@ -180,45 +186,76 @@ struct ObjectInfoSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    if let ref = info.imageRef, let image = ImageStore.shared.photo(ref) {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: .infinity)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .colorMultiply(model.nightMode ? .red : .white)
-                        if let credit = info.imageCredit {
-                            Text("Image: \(credit)").font(.caption2).foregroundStyle(.secondary)
-                        }
-                    }
-                    header
-                    if let d = info.description { Text(d) }
-                    if let f = info.funFact {
-                        Label { Text(f) } icon: { Image(systemName: "sparkles") }
-                            .padding(10)
-                            .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
-                    }
-                    dataRows
-                    if !info.links.isEmpty { links }
-                    if info.position != nil || SolarSystemBody(objectId: info.id) != nil {
-                        Button {
-                            if let hit = findHit { model.go(to: hit) }
-                            dismiss()
-                        } label: {
-                            Label("Show in sky", systemImage: "scope").frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                }
-                .padding()
-            }
-            .navigationTitle(info.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            ObjectInfoView(model: model, info: info, close: { dismiss() })
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+/// An info card looked up by id, for pushing onto an existing navigation stack.
+struct ObjectInfoPage: View {
+    @ObservedObject var model: AppModel
+    let id: String
+    let close: () -> Void
+
+    var body: some View {
+        if let info = model.info(id) {
+            ObjectInfoView(model: model, info: info, close: close)
+        } else {
+            Text("No information available.").foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// The card's content. `close` dismisses the whole sheet it lives in; "see also" links push
+/// further cards onto the same navigation stack.
+struct ObjectInfoView: View {
+    @ObservedObject var model: AppModel
+    let info: ObjectInfo
+    let close: () -> Void
+    @State private var linkedId: String?
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                if let ref = info.imageRef, let image = ImageStore.shared.photo(ref) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .colorMultiply(model.nightMode ? .red : .white)
+                    if let credit = info.imageCredit {
+                        Text("Image: \(credit)").font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+                header
+                if let d = info.description { Text(d) }
+                if let f = info.funFact {
+                    Label { Text(f) } icon: { Image(systemName: "sparkles") }
+                        .padding(10)
+                        .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+                }
+                dataRows
+                if !info.links.isEmpty { links }
+                if info.position != nil || SolarSystemBody(objectId: info.id) != nil {
+                    Button {
+                        if let hit = findHit { model.go(to: hit) }
+                        close()
+                    } label: {
+                        Label("Show in sky", systemImage: "scope").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .padding()
+        }
+        .navigationTitle(info.name)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done", action: close) } }
+        .navigationDestination(item: $linkedId) { id in
+            ObjectInfoPage(model: model, id: id, close: close)
+        }
     }
 
     private var findHit: SearchHit? {
@@ -281,7 +318,7 @@ struct ObjectInfoSheet: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     ForEach(info.links) { link in
-                        Button(link.name) { model.selectedInfo = model.info(link.id) }
+                        Button(link.name) { linkedId = link.id }
                             .buttonStyle(.bordered)
                     }
                 }
@@ -350,6 +387,7 @@ struct GallerySheet: View {
     @ObservedObject var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var items: [GalleryItem] = []
+    @State private var infoId: String?
 
     var body: some View {
         NavigationStack {
@@ -357,8 +395,7 @@ struct GallerySheet: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 8)], spacing: 8) {
                     ForEach(items) { item in
                         Button {
-                            dismiss()
-                            model.showInfo(item.id, afterSheetDismissal: true)
+                            infoId = item.id
                         } label: {
                             VStack(spacing: 4) {
                                 Thumbnail(ref: item.imageRef, night: model.nightMode)
@@ -372,7 +409,10 @@ struct GallerySheet: View {
             .navigationTitle("Gallery")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-            .onAppear { items = model.catalog?.galleryItems(model.locale) ?? [] }
+            .onAppear { if items.isEmpty { items = model.catalog?.galleryItems(model.locale) ?? [] } }
+            .navigationDestination(item: $infoId) { id in
+                ObjectInfoPage(model: model, id: id, close: { dismiss() })
+            }
         }
     }
 }

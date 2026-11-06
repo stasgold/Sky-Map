@@ -348,30 +348,22 @@ final class AppModel: ObservableObject {
         catalog?.objectInfo(id, locale, dynamicPosition: { [unowned self] in dynamicPosition($0) })
     }
 
-    /// Opens an info card. When another sheet is closing, wait for it: SwiftUI drops a sheet
-    /// presented while a different one is still animating away.
-    func showInfo(_ id: String, afterSheetDismissal: Bool = false) {
-        guard afterSheetDismissal else {
-            selectedInfo = info(id)
-            return
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
-            guard let self else { return }
-            self.selectedInfo = self.info(id)
-        }
+    /// Opens an info card as its own sheet (used when no other sheet is open: a map tap).
+    func showInfo(_ id: String) {
+        selectedInfo = info(id)
     }
 
     /// Navigates to a search hit: slews in manual mode; shows the guidance arrow either way.
-    func go(to hit: SearchHit) {
-        let position = dynamicPosition(hit.id) ?? hit.position
-        guard let position else {
-            showInfo(hit.id, afterSheetDismissal: true)
-            return
-        }
+    /// Returns false for a card-only object with no place in the sky, so the caller can show
+    /// its info card instead.
+    @discardableResult
+    func go(to hit: SearchHit) -> Bool {
+        guard let position = dynamicPosition(hit.id) ?? hit.position else { return false }
         searchTarget = hit
         if !sensorMode {
             controller.aim(at: position.toGeocentricVector(), fovDeg: hit.searchFovDeg)
         }
+        return true
     }
 
     private lazy var identifiableIds: Set<String> = catalog?.infoCardObjectIds() ?? []
