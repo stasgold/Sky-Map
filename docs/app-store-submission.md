@@ -54,7 +54,7 @@ below mirrors it.
 **Privacy Policy URL:** `https://github.com/stasgold/Sky-Map/blob/main/PRIVACY.md`
 
 **Category:** Primary **Education**, secondary **Reference**
-**Copyright:** `2026 Penterakt LLC and contributors` (the upstream code and data; add your name for the port if you like)
+**Copyright:** `2026 Stanislav Goldberg` (the publisher; upstream authors are credited in the app and in NOTICE.md)
 
 ## App Privacy (the "nutrition label")
 
