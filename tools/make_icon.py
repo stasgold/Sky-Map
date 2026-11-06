@@ -3,7 +3,7 @@
 # Requires Pillow. Renders at 4x and downsamples for clean edges.
 #
 # A flat compass over the night sky: a bold azimuth ring with cross-ticks, a segmented inner
-# ring, an eight-pointed star with equal points, and a scatter of stars (gold sparkles, ringed bright
+# ring, a faceted eight-point crystal star with gold rays and a warm core, and a scatter of stars (gold sparkles, ringed bright
 # stars and small dots).
 import math
 import sys
@@ -61,18 +61,16 @@ for y in range(256):
 img = grad.resize((S, S), Image.BICUBIC)
 img = Image.alpha_composite(img, soft_disc((C, C), S * 0.30, (60, 110, 210), 70, S * 0.12))
 
-# --- Azimuth ring with cross-ticks ------------------------------------------------------
+# --- Azimuth ring with cross-ticks every 30° ------------------------------------------------------
 R = S * 0.407
 ring = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 rd = ImageDraw.Draw(ring)
-rd.ellipse([C - R, C - R, C + R, C + R], outline=RING + (255,), width=int(10 * SS))
-for deg in range(0, 360, 10):
+rd.ellipse([C - R, C - R, C + R, C + R], outline=RING + (255,), width=int(8 * SS))
+for deg in range(0, 360, 30):
     if deg % 90 == 0:      # cardinal: long bar across the ring
-        a, b, w = R - S * 0.035, R + S * 0.045, 12
-    elif deg % 30 == 0:    # every 30°: bar across the ring
-        a, b, w = R - S * 0.028, R + S * 0.028, 11
-    else:                  # minor: short tick inside the ring
-        a, b, w = R - S * 0.03, R, 5
+        a, b, w = R - S * 0.035, R + S * 0.045, 10
+    else:                  # every 30°: bar across the ring
+        a, b, w = R - S * 0.03, R + S * 0.03, 10
     rd.line([polar(a, deg), polar(b, deg)], fill=RING + (255,), width=int(w * SS))
 img = Image.alpha_composite(img, ring)
 
@@ -90,7 +88,7 @@ for k in range(8):
 img = Image.alpha_composite(img, inner)
 
 
-# --- Eight-pointed star, all points equal ------------------------------------------------------------
+# --- Crystal compass star: eight faceted points, gold rays between, warm core -----------
 def point(bearing, length, hw):
     tip = polar(length, bearing)
     left = polar(hw, bearing - 90)
@@ -98,38 +96,58 @@ def point(bearing, length, hw):
     return [(C, C), left, tip], [(C, C), tip, right]
 
 
-img = Image.alpha_composite(img, soft_disc((C, C), S * 0.16, (90, 160, 240), 110, S * 0.08))
+img = Image.alpha_composite(img, soft_disc((C, C), S * 0.17, (90, 160, 240), 110, S * 0.08))
 star = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 sd = ImageDraw.Draw(star)
-for k in range(4):
-    lit, dark = point(45 + 90 * k, S * 0.315, S * 0.058)
-    sd.polygon(lit, fill=DIAG_LIT + (255,))
-    sd.polygon(dark, fill=DIAG_DARK + (255,))
-for bearing, length in ((0, 0.315), (90, 0.315), (180, 0.315), (270, 0.315)):
-    lit, dark = point(bearing, S * length, S * 0.058)
+for k in range(8):  # slim gold rays in the gaps between the points
+    lit, dark = point(22.5 + 45 * k, S * 0.19, S * 0.014)
+    sd.polygon(lit, fill=(250, 206, 130, 255))
+    sd.polygon(dark, fill=(196, 140, 70, 255))
+for k in range(4):  # diagonal points, a little shorter
+    lit, dark = point(45 + 90 * k, S * 0.275, S * 0.052)
+    sd.polygon(lit, fill=WHITE + (255,))
+    sd.polygon(dark, fill=(168, 206, 244, 255))
+for k in range(4):  # cardinal points
+    lit, dark = point(90 * k, S * 0.335, S * 0.060)
     sd.polygon(lit, fill=WHITE + (255,))
     sd.polygon(dark, fill=ICE + (255,))
-img = Image.alpha_composite(img, glow_of(star, (120, 180, 255), SS * 10, 0.35))
+img = Image.alpha_composite(img, glow_of(star, (140, 190, 255), SS * 12, 0.35))
 img = Image.alpha_composite(img, star)
+
+# Warm core: a golden glow where the facets meet, fading out along the points, with a
+# fine gold seam down the ridge of each point.
+seams = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+sm = ImageDraw.Draw(seams)
+for k in range(8):
+    length = S * (0.335 if k % 2 == 0 else 0.275) * 0.55
+    sm.line([(C, C), polar(length, 45 * k)], fill=(246, 184, 92, 150), width=int(3 * SS))
+fade = Image.new("L", (S, S), 0)
+ImageDraw.Draw(fade).ellipse([C - S * 0.19, C - S * 0.19, C + S * 0.19, C + S * 0.19], fill=255)
+fade = fade.filter(ImageFilter.GaussianBlur(S * 0.06))
+seams.putalpha(Image.composite(seams.getchannel("A"), Image.new("L", (S, S), 0), fade))
+img = Image.alpha_composite(img, seams)
+img = Image.alpha_composite(img, soft_disc((C, C), S * 0.075, (246, 184, 92), 170, S * 0.035))
+img = Image.alpha_composite(img, soft_disc((C, C), S * 0.022, (255, 248, 230), 255, S * 0.010))
 
 
 # --- Stars -----------------------------------------------------------------------------
 def sparkle(img, x, y, length, color):
     layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
-    for k in range(4):
-        a = math.radians(90 * k)
+    for k in range(8):
+        a = math.radians(45 * k)
+        ray = length if k % 2 == 0 else length * 0.55
         ux, uy = math.cos(a), -math.sin(a)
         px, py = -uy, ux
         pts = []
         for i in range(41):
             t = i / 40
-            w = length * 0.22 * (1 - t) ** 1.8
-            pts.append((x + ux * length * t + px * w, y + uy * length * t + py * w))
+            w = ray * 0.2 * (1 - t) ** 1.8
+            pts.append((x + ux * ray * t + px * w, y + uy * ray * t + py * w))
         for i in range(40, -1, -1):
             t = i / 40
-            w = length * 0.22 * (1 - t) ** 1.8
-            pts.append((x + ux * length * t - px * w, y + uy * length * t - py * w))
+            w = ray * 0.2 * (1 - t) ** 1.8
+            pts.append((x + ux * ray * t - px * w, y + uy * ray * t - py * w))
         d.polygon(pts, fill=color + (255,))
     img = Image.alpha_composite(img, soft_disc((x, y), length * 0.45, color, 110, length * 0.3))
     return Image.alpha_composite(img, layer)
@@ -138,10 +156,11 @@ def sparkle(img, x, y, length, color):
 dots = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 dd = ImageDraw.Draw(dots)
 # Ringed bright stars: (x, y, colour) as fractions of the icon.
-for fx, fy, col in ((0.219, 0.381, WHITE), (0.257, 0.676, WHITE), (0.698, 0.247, CYAN)):
+for fx, fy, col in ((0.219, 0.381, (255, 236, 204)), (0.257, 0.676, (255, 236, 204)), (0.698, 0.247, CYAN)):
     x, y, r = S * fx, S * fy, S * 0.011
     dd.ellipse([x - r, y - r, x + r, y + r], fill=col + (255,))
-    dd.ellipse([x - r * 2.1, y - r * 2.1, x + r * 2.1, y + r * 2.1], outline=col + (130,), width=int(3 * SS))
+    halo = CYAN if col == CYAN else GOLD
+    dd.ellipse([x - r * 2.1, y - r * 2.1, x + r * 2.1, y + r * 2.1], outline=halo + (150,), width=int(3 * SS))
 # Small dots.
 for fx, fy, col, rr in ((0.619, 0.171, GOLD, 0.0060), (0.790, 0.359, GOLD, 0.0075),
                         (0.188, 0.580, WHITE, 0.0060), (0.580, 0.660, GOLD, 0.0060), (0.819, 0.629, WHITE, 0.0065),
