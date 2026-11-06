@@ -1,0 +1,21 @@
+name: Check App Store submission
+
+# Read-only: reports what App Store Connect holds for the editable version (listing, build,
+# screenshots, age rating, review details, price and availability). Changes nothing.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install --quiet "pyjwt[crypto]"
+      - name: Check
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          BUNDLE_ID: io.github.stasgold.skyatlas
+        run: python3 tools/asc_check.py
