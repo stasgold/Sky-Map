@@ -82,8 +82,10 @@ jobs:
                 -resultBundlePath "$RUNNER_TEMP/$label.xcresult" || true
               xcrun xcresulttool export attachments --path "$RUNNER_TEMP/$label.xcresult" \
                 --output-path "$RUNNER_TEMP/att-$label" || true
-              grep -q '"suggestedHumanReadableName" *: *"01-sky' "$RUNNER_TEMP/att-$label/manifest.json" 2>/dev/null && break
-              echo "No screenshots on attempt $attempt for $label; rebooting the simulator and retrying."
+              # Every screen must be there; otherwise retry the device once.
+              n=$(grep -oE '"suggestedHumanReadableName" *: *"0[1-8]-' "$RUNNER_TEMP/att-$label/manifest.json" 2>/dev/null | sort -u | wc -l)
+              [ "$n" -ge 8 ] && break
+              echo "Only $n of 8 screens on attempt $attempt for $label; rebooting the simulator and retrying."
               xcrun simctl shutdown "$udid" || true
               xcrun simctl boot "$udid" || true
               xcrun simctl bootstatus "$udid" -b

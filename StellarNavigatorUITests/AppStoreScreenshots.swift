@@ -61,13 +61,30 @@ final class AppStoreScreenshots: XCTestCase {
         sleep(1)
         shot("03-search")
         let firstResult = app.cells.firstMatch
-        if firstResult.waitForExistence(timeout: 5) {
+        XCTAssertTrue(firstResult.waitForExistence(timeout: 10), "no search result for Jupiter")
+        if firstResult.exists {
             firstResult.swipeLeft()
             tap("Info")
             sleep(3)
             shot("02-info-card")
             tap("Done")
             sleep(1)
+        }
+
+        // Search for a constellation and let the map glide to it.
+        tap("Search")
+        let field2 = app.searchFields.firstMatch
+        if field2.waitForExistence(timeout: 5) {
+            field2.tap()
+            field2.typeText("Orion")
+            sleep(1)
+            let hit = app.cells.firstMatch
+            XCTAssertTrue(hit.waitForExistence(timeout: 10), "no search result for Orion")
+            if hit.exists {
+                hit.tap()
+                sleep(3)
+                shot("05-find-orion")
+            }
         }
 
         // A full list of results, with the keyboard put away.
@@ -84,21 +101,6 @@ final class AppStoreScreenshots: XCTestCase {
             shot("04-search-results")
             tap("Close")
             sleep(1)
-        }
-
-        // Search for a constellation and let the map glide to it.
-        tap("Search")
-        let field2 = app.searchFields.firstMatch
-        if field2.waitForExistence(timeout: 5) {
-            field2.tap()
-            field2.typeText("Orion")
-            sleep(1)
-            let hit = app.cells.firstMatch
-            if hit.waitForExistence(timeout: 5) {
-                hit.tap()
-                sleep(3)
-                shot("05-find-orion")
-            }
         }
 
         tap("Layers")
