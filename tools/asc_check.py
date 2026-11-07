@@ -36,8 +36,20 @@ def main():
     report("PASS", "Version", f"{va['versionString']} — {va.get('appStoreState')}")
     report("PASS" if va.get("copyright") else "FAIL", "Copyright", str(va.get("copyright")))
 
-    # Listing text (version localization).
+    # Where the media actually lives: every localization of the version and its screenshot sets.
+    print(f"      primary locale: {app['attributes'].get('primaryLocale')}")
     locs = call("GET", f"/appStoreVersions/{v['id']}/appStoreVersionLocalizations")["data"]
+    for l in locs:
+        lsets = call("GET", f"/appStoreVersionLocalizations/{l['id']}/appScreenshotSets")["data"]
+        summary = []
+        for s_ in lsets:
+            n = len(call("GET", f"/appScreenshotSets/{s_['id']}/appScreenshots")["data"])
+            summary.append(f"{s_['attributes']['screenshotDisplayType']}={n}")
+        print(f"      localization {l['attributes']['locale']} ({l['id']}): {', '.join(summary) or 'no screenshot sets'}")
+    for x in versions:
+        print(f"      version {x['attributes']['versionString']} {x['attributes'].get('platform')} "
+              f"{x['attributes'].get('appStoreState')} id={x['id']}")
+
     loc = next((l for l in locs if l["attributes"]["locale"] == L["locale"]), None)
     if not loc:
         report("FAIL", f"Version localization {L['locale']}", "missing")
