@@ -56,6 +56,22 @@ below mirrors it.
 **Category:** Primary **Education**, secondary **Reference**
 **Copyright:** `2026 Stanislav Goldberg` (the publisher; upstream authors are credited in the app and in NOTICE.md)
 
+## Listing translations
+
+`appstore/localizations.json` holds the listing in 13 more languages, keyed by App Store
+Connect locale: `ru`, `fr-FR`, `de-DE`, `es-ES`, `pt-BR`, `it`, `nl-NL`, `pl`, `ja`, `ko`,
+`zh-Hant`, `ar-SA` and `he`. Each has the name (kept as `Star Nav`), subtitle, promotional
+text, description and keywords; the support, marketing and privacy policy URLs are the same
+as English. They were entered in App Store Connect by hand for 1.0 (the listing workflow
+only applies `listing.json`).
+
+The app's own menus are English only, so every description says so in a short language
+note, saying which parts *are* translated (star names, search, info cards). Russian has no
+translated info cards and Hebrew has no in-app translation at all; their notes reflect
+that. The search examples use the names the app shows in each language (from
+`SkyCore/.../catalog/names/*.csv`). The new languages reuse the English screenshots and
+header art.
+
 ## App Privacy (the "nutrition label")
 
 Answer **"No, we do not collect data from this app."** Location and motion are used only on the
